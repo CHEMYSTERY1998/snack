@@ -556,10 +556,8 @@ export class GameRoom {
         snake.score += food.value;
         this.gameState.foods.splice(foodIndex, 1);
         // 吃到食物不删除尾巴，蛇变长
-        // 更新最长长度
-        if (snake.segments.length > snake.maxLength) {
-          snake.maxLength = snake.segments.length;
-        }
+        // 累计最长长度（每次吃到食物都累计）
+        snake.maxLength++;
       } else {
         snake.segments.pop();
       }
@@ -649,6 +647,8 @@ export class GameRoom {
     snake.spawnTime = Date.now();
     snake.effects = [];
     snake.moveAccumulator = 0; // 重置移动累加器
+    // 清除方向锁定，允许立即改变方向
+    this.playerDirectionLocked.delete(snake.playerId);
   }
 
   private applyPowerUp(snake: SnakeState, powerUp: PowerUpState): void {
