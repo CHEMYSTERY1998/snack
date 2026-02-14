@@ -2,8 +2,8 @@ import type { GameConfig } from '../types/game';
 
 // 默认游戏配置
 export const DEFAULT_GAME_CONFIG: GameConfig = {
-  gridWidth: 60,
-  gridHeight: 40,
+  gridWidth: 80,
+  gridHeight: 50,
   cellSize: 15,
   gameSpeed: 50,
   maxPlayers: 8,
@@ -86,4 +86,4 @@ export const NETWORK_CONFIG = {
 };
 
 // 服务器端口
-export const SERVER_PORT = 3000;
+export const SERVER_PORT = 8080;
