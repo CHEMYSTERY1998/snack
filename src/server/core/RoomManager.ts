@@ -93,7 +93,7 @@ export class RoomManager {
 
   getRoomList(): RoomInfo[] {
     return Array.from(this.rooms.values())
-      .filter(room => room.info.status !== 'finished')
+      .filter(room => room.info.status === 'waiting') // 只显示等待中的房间
       .map(room => room.info);
   }
 
