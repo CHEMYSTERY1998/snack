@@ -13,8 +13,7 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(powershell:*)",
-      "Bash(npm run build)"
+      "Bash(powershell:*)"
     ]
   }
 }
