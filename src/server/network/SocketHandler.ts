@@ -99,6 +99,26 @@ export class SocketHandler {
       return;
     }
 
+    // 检查该 socket 是否已经有关联的玩家（防止重复登录）
+    const existingPlayerId = this.socketPlayerMap.get(socket.id);
+    if (existingPlayerId) {
+      // 清理旧的玩家实例
+      const existingPlayer = this.playerManager.getPlayer(existingPlayerId);
+      if (existingPlayer?.currentRoomId) {
+        const roomId = existingPlayer.currentRoomId;
+        this.roomManager.leaveRoom(roomId, existingPlayerId);
+        socket.leave(roomId);
+        socket.to(roomId).emit('room:player_left', { playerId: existingPlayerId });
+        // 更新房间状态
+        const roomState = this.roomManager.getRoomState(roomId);
+        if (roomState) {
+          this.io.to(roomId).emit('room:updated', { room: roomState });
+        }
+      }
+      this.playerManager.removePlayer(existingPlayerId);
+      this.socketPlayerMap.delete(socket.id);
+    }
+
     // 原子操作：检查名称并创建玩家（防止竞态条件）
     const player = this.playerManager.createPlayerIfNameAvailable(trimmedName, socket.id);
     if (!player) {
@@ -328,7 +348,14 @@ export class SocketHandler {
 
       if (roomId) {
         this.roomManager.leaveRoom(roomId, playerId);
+        socket.leave(roomId);
         socket.to(roomId).emit('room:player_left', { playerId });
+
+        // 更新房间状态
+        const roomState = this.roomManager.getRoomState(roomId);
+        if (roomState) {
+          this.io.to(roomId).emit('room:updated', { room: roomState });
+        }
       }
 
       // 移除玩家

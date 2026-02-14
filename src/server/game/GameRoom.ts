@@ -62,6 +62,17 @@ export class GameRoom {
       this.state.playerIds = this.playerIds;
       this.playerColors.delete(playerId);
       this.playerNames.delete(playerId);
+      this.playerKillCounts.delete(playerId);
+      this.playerStartTimes.delete(playerId);
+      this._playerInputs.delete(playerId);
+
+      // 移除玩家的蛇（如果游戏正在进行）
+      if (this.gameState) {
+        const snakeIndex = this.gameState.snakes.findIndex(s => s.playerId === playerId);
+        if (snakeIndex !== -1) {
+          this.gameState.snakes.splice(snakeIndex, 1);
+        }
+      }
     }
   }
 
