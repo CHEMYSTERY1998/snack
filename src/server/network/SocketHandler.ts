@@ -87,12 +87,25 @@ export class SocketHandler {
   }
 
   private handlePlayerJoin(socket: Socket<ClientToServerEvents, ServerToClientEvents>, name: string): void {
-    if (!name || name.trim().length < 2) {
+    const trimmedName = name.trim();
+
+    if (!trimmedName || trimmedName.length < 2) {
       socket.emit('player:error', { message: '名称至少需要2个字符' });
       return;
     }
 
-    const player = this.playerManager.createPlayer(name, socket.id);
+    if (trimmedName.length > 12) {
+      socket.emit('player:error', { message: '名称不能超过12个字符' });
+      return;
+    }
+
+    // 原子操作：检查名称并创建玩家（防止竞态条件）
+    const player = this.playerManager.createPlayerIfNameAvailable(trimmedName, socket.id);
+    if (!player) {
+      socket.emit('player:error', { message: '该名称已被使用' });
+      return;
+    }
+
     this.socketPlayerMap.set(socket.id, player.id);
 
     socket.emit('player:joined', { player });

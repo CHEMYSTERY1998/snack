@@ -58,6 +58,34 @@ export class PlayerManager {
     return Array.from(this.players.values());
   }
 
+  isNameExists(name: string): boolean {
+    const normalizedName = name.trim().toLowerCase().substring(0, 12);
+    return Array.from(this.players.values()).some(
+      p => p.name.toLowerCase() === normalizedName
+    );
+  }
+
+  /**
+   * Atomically check if name exists and create player if not.
+   * Returns the player if created, or null if name is already taken.
+   * This prevents TOCTOU race conditions.
+   */
+  createPlayerIfNameAvailable(name: string, socketId: string): PlayerInfo | null {
+    const normalizedName = name.trim().toLowerCase().substring(0, 12);
+
+    // Check if name exists
+    const nameExists = Array.from(this.players.values()).some(
+      p => p.name.toLowerCase() === normalizedName
+    );
+
+    if (nameExists) {
+      return null;
+    }
+
+    // Name is available, create the player
+    return this.createPlayer(name, socketId);
+  }
+
   private getNextColor(): string {
     const usedColors = new Set(Array.from(this.players.values()).map(p => p.color));
     for (const color of PLAYER_COLORS) {
