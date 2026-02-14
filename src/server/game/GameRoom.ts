@@ -1,7 +1,7 @@
 import type { RoomInfo, RoomState, RoomConfig } from '@shared/types/room';
 import type { GameState, SnakeState, FoodState, PowerUpState, Position, Direction, PlayerInput, PowerUpType, GameResult } from '@shared/types/game';
 import { generateId, randomUnoccupiedPosition, isSamePosition, isWithinBounds, getOppositeDirection, isPositionOccupied } from '@shared/utils';
-import { DEFAULT_GAME_CONFIG, FOOD_SCORES, POWER_UP_SCORE, PLAYER_COLORS } from '@shared/constants';
+import { DEFAULT_GAME_CONFIG, FOOD_SCORES, POWER_UP_SCORE, PLAYER_COLORS, POWER_UP_NAMES } from '@shared/constants';
 
 export class GameRoom {
   info: RoomInfo;
@@ -591,25 +591,33 @@ export class GameRoom {
   private applyPowerUp(snake: SnakeState, powerUp: PowerUpState): void {
     snake.score += POWER_UP_SCORE;
 
+    // 获取玩家名称
+    const playerName = this.playerNames.get(snake.playerId) || '玩家';
+    const powerUpName = POWER_UP_NAMES[powerUp.type] || '道具';
+
     switch (powerUp.type) {
       case 'speed_boost':
         // 永久加速
         snake.speedBoostCount++;
+        this.addGameMessage(`${playerName} 获得了 ${powerUpName}！`);
         break;
 
       case 'speed_slow':
         // 永久减速
         snake.speedSlowCount++;
+        this.addGameMessage(`${playerName} 获得了 ${powerUpName}！`);
         break;
 
       case 'wall_pass':
         // 增加穿墙次数
         snake.wallPassCount++;
+        this.addGameMessage(`${playerName} 获得了 ${powerUpName}（剩余${snake.wallPassCount}次）！`);
         break;
 
       case 'invincible':
         // 增加无敌次数
         snake.invincibleCount++;
+        this.addGameMessage(`${playerName} 获得了 ${powerUpName}（剩余${snake.invincibleCount}次）！`);
         break;
 
       case 'shrink_opponent':
@@ -628,6 +636,10 @@ export class GameRoom {
             const attackerName = this.playerNames.get(snake.playerId) || '玩家';
             const targetName = this.playerNames.get(targetSnake.playerId) || '玩家';
             this.addGameMessage(`${attackerName} 对 ${targetName} 使用了缩短效果！(${oldLength} → ${newLength})`);
+          } else {
+            // 没有目标可缩短，仍然显示提示
+            const noTargetName = this.playerNames.get(snake.playerId) || '玩家';
+            this.addGameMessage(`${noTargetName} 获得了 ${powerUpName}，但没有目标！`);
           }
         }
         break;

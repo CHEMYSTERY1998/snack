@@ -260,4 +260,90 @@ export class UIManager {
     const indicator = document.getElementById('latency-indicator');
     indicator?.classList.remove('hidden');
   }
+
+  // 游戏消息
+  private lastMessageCount = 0;
+  private messageTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
+
+  updateGameMessages(messages: string[]): void {
+    const container = document.getElementById('game-messages');
+    if (!container) return;
+
+    // 计算新消息数量（处理服务器裁剪旧消息的情况）
+    // 服务器最多保留5条消息，如果新消息比上次多，说明有新消息
+    // 如果数量相同或更少，可能是服务器重启或重置，需要检查最后一条消息
+    let newMessageCount = 0;
+
+    if (messages.length > this.lastMessageCount) {
+      // 明显有新消息
+      newMessageCount = messages.length - this.lastMessageCount;
+    } else if (messages.length > 0 && messages.length <= this.lastMessageCount) {
+      // 检查是否有新消息添加（服务器可能裁剪了旧消息）
+      // 通过比较最后几条消息来判断
+      const recentMessages = messages.slice(-Math.min(messages.length, 3));
+      const lastKnownMessage = this.lastMessageCount > 0 ?
+        this.lastDisplayedMessages[this.lastDisplayedMessages.length - 1] : null;
+
+      if (lastKnownMessage && !recentMessages.includes(lastKnownMessage)) {
+        // 服务器消息列表已被重置或大幅更新，显示最新的消息
+        newMessageCount = 1; // 只显示最新一条
+      }
+    }
+
+    if (newMessageCount === 0) {
+      this.lastMessageCount = messages.length;
+      return;
+    }
+
+    // 记录当前显示的消息
+    this.lastDisplayedMessages = [...messages];
+    this.lastMessageCount = messages.length;
+
+    // 显示消息容器
+    container.classList.remove('hidden');
+
+    // 显示新消息（从最新的newMessageCount条）
+    const newMessages = messages.slice(-newMessageCount);
+
+    newMessages.forEach((msg, index) => {
+      const timeoutId = setTimeout(() => {
+        this.messageTimeouts.delete(timeoutId);
+
+        const msgElement = document.createElement('div');
+        msgElement.className = 'game-message';
+        msgElement.textContent = msg;
+        container.appendChild(msgElement);
+
+        // 5秒后移除
+        const fadeTimeoutId = setTimeout(() => {
+          this.messageTimeouts.delete(fadeTimeoutId);
+          msgElement.style.opacity = '0';
+          msgElement.style.transition = 'opacity 0.5s';
+          const removeTimeoutId = setTimeout(() => {
+            this.messageTimeouts.delete(removeTimeoutId);
+            msgElement.remove();
+          }, 500);
+          this.messageTimeouts.add(removeTimeoutId);
+        }, 5000);
+        this.messageTimeouts.add(fadeTimeoutId);
+      }, index * 300); // 错开显示时间
+      this.messageTimeouts.add(timeoutId);
+    });
+  }
+
+  private lastDisplayedMessages: string[] = [];
+
+  clearGameMessages(): void {
+    // 清除所有待处理的定时器
+    this.messageTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    this.messageTimeouts.clear();
+
+    const container = document.getElementById('game-messages');
+    if (container) {
+      container.innerHTML = '';
+      container.classList.add('hidden');
+    }
+    this.lastMessageCount = 0;
+    this.lastDisplayedMessages = [];
+  }
 }

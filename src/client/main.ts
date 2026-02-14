@@ -117,15 +117,21 @@ function setupEventListeners() {
 
   networkClient.on('game:started', () => {
     uiManager!.showScreen('game');
+    uiManager!.clearGameMessages();
     game!.start();
   });
 
   networkClient.on('game:state', (data: { state: GameState; timestamp: number }) => {
     game!.updateState(data.state);
+    // 更新游戏消息
+    if (data.state.messages) {
+      uiManager!.updateGameMessages(data.state.messages);
+    }
   });
 
   networkClient.on('game:ended', (data: { results: GameResult[] }) => {
     game!.stop();
+    uiManager!.clearGameMessages();
     uiManager!.showGameOver(data.results);
   });
 
