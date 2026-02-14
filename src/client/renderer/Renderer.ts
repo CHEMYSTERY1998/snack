@@ -67,8 +67,40 @@ export class Renderer {
     for (const snake of sortedSnakes) {
       if (snake.isAlive) {
         this.drawSnake(snake, snake.playerId === localPlayerId);
+      } else if (snake.respawnTime) {
+        // 显示复活倒计时
+        this.drawRespawnCountdown(snake);
       }
     }
+  }
+
+  private drawRespawnCountdown(snake: SnakeState): void {
+    if (!snake.respawnTime) return;
+
+    const remaining = Math.max(0, snake.respawnTime - Date.now());
+    const seconds = Math.ceil(remaining / 1000);
+
+    // 在画布中央显示复活倒计时
+    const centerX = (this.config.gridWidth * this.cellSize) / 2;
+    const centerY = (this.config.gridHeight * this.cellSize) / 2;
+
+    // 半透明背景
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 倒计时文字
+    this.ctx.fillStyle = snake.color;
+    this.ctx.font = 'bold 32px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(seconds.toString(), centerX, centerY - 10);
+
+    // 提示文字
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    this.ctx.font = '14px sans-serif';
+    this.ctx.fillText('复活中...', centerX, centerY + 20);
   }
 
   private drawSnake(snake: SnakeState, isLocal: boolean): void {

@@ -23,6 +23,7 @@ export interface SnakeState {
   isAlive: boolean;
   effects: ActiveEffect[];
   color: string;
+  respawnTime?: number; // 复活时间戳，undefined 表示存活
 }
 
 // 食物类型
@@ -70,6 +71,7 @@ export interface GameConfig {
   initialSnakeLength: number;
   foodSpawnRate: number;
   powerUpSpawnRate: number;
+  respawnTime: number; // 复活等待时间（毫秒）
   powerUpDuration: {
     speed_boost: number;
     speed_slow: number;

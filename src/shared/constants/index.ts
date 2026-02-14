@@ -5,11 +5,12 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   gridWidth: 60,
   gridHeight: 40,
   cellSize: 15,
-  gameSpeed: 50, // 200ms = 5 ticks per second，更易控制
+  gameSpeed: 200, // 200ms = 5 ticks per second，更易控制
   maxPlayers: 8,
   initialSnakeLength: 3,
   foodSpawnRate: 0.1, // 每帧生成食物的概率
   powerUpSpawnRate: 0.02, // 每帧生成道具的概率
+  respawnTime: 3000, // 复活等待时间 3秒
   powerUpDuration: {
     speed_boost: 5000,
     speed_slow: 5000,

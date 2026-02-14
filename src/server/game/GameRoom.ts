@@ -191,6 +191,9 @@ export class GameRoom {
 
     this.gameState.tick++;
 
+    // 检查并复活死亡的蛇
+    this.checkRespawns();
+
     // 更新所有蛇
     this.updateSnakes();
 
@@ -201,11 +204,17 @@ export class GameRoom {
     if (Math.random() < DEFAULT_GAME_CONFIG.powerUpSpawnRate) {
       this.spawnPowerUp();
     }
+  }
 
-    // 检查游戏结束 - 只有当没有蛇存活时才结束（支持单人游戏）
-    const aliveSnakes = this.gameState.snakes.filter(s => s.isAlive);
-    if (aliveSnakes.length === 0) {
-      this.endGame();
+  private checkRespawns(): void {
+    if (!this.gameState) return;
+
+    const now = Date.now();
+    for (const snake of this.gameState.snakes) {
+      // 如果蛇死亡且到达复活时间
+      if (!snake.isAlive && snake.respawnTime && now >= snake.respawnTime) {
+        this.respawnSnake(snake);
+      }
     }
   }
 
@@ -308,6 +317,47 @@ export class GameRoom {
 
   private killSnake(snake: SnakeState): void {
     snake.isAlive = false;
+    // 设置复活时间
+    snake.respawnTime = Date.now() + DEFAULT_GAME_CONFIG.respawnTime;
+    // 清除效果
+    snake.effects = [];
+  }
+
+  private respawnSnake(snake: SnakeState): void {
+    const gridWidth = this.config.mapWidth;
+    const gridHeight = this.config.mapHeight;
+    const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+
+    // 找一个安全的复活位置
+    const margin = 10;
+    const corners = [
+      { x: margin + length, y: margin + length, dir: 'right' as Direction },
+      { x: gridWidth - margin - length, y: margin + length, dir: 'left' as Direction },
+      { x: gridWidth - margin - length, y: gridHeight - margin - length, dir: 'left' as Direction },
+      { x: margin + length, y: gridHeight - margin - length, dir: 'right' as Direction },
+    ];
+
+    // 根据玩家索引选择角落
+    const playerIndex = this.playerIds.indexOf(snake.playerId);
+    const corner = corners[playerIndex % 4];
+
+    // 生成新的身体段
+    const positions: Position[] = [];
+    if (corner.dir === 'right') {
+      for (let i = 0; i < length; i++) {
+        positions.push({ x: corner.x - i, y: corner.y });
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        positions.push({ x: corner.x + i, y: corner.y });
+      }
+    }
+
+    snake.segments = positions.map(pos => ({ position: pos }));
+    snake.direction = corner.dir;
+    snake.isAlive = true;
+    snake.respawnTime = undefined;
+    snake.effects = [];
   }
 
   private applyPowerUp(snake: SnakeState, powerUp: PowerUpState): void {
