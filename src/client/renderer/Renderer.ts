@@ -1,5 +1,5 @@
 import type { GameConfig, GameState, SnakeState, FoodState, PowerUpState } from '@shared/types/game';
-import { POWER_UP_ICONS } from '@shared/constants';
+import { POWER_UP_ICONS, FOOD_COLORS } from '@shared/constants';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -216,8 +216,8 @@ export class Renderer {
       const y = food.position.y * this.cellSize + this.cellSize / 2;
       const radius = (this.cellSize / 2) - 2;
 
-      // 根据类型选择颜色
-      const color = food.type === 'super' ? '#FFD700' : '#4ECDC4';
+      // 根据类型选择颜色（与玩家颜色区分）
+      const color = food.type === 'super' ? FOOD_COLORS.super : FOOD_COLORS.normal;
 
       // 绘制发光效果
       this.ctx.shadowColor = color;

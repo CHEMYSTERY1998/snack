@@ -1,7 +1,7 @@
 import type { RoomInfo, RoomState, RoomConfig } from '@shared/types/room';
 import type { GameState, SnakeState, FoodState, PowerUpState, Position, Direction, PlayerInput, PowerUpType, GameResult } from '@shared/types/game';
 import { generateId, randomUnoccupiedPosition, isSamePosition, isWithinBounds, getOppositeDirection, isPositionOccupied } from '@shared/utils';
-import { DEFAULT_GAME_CONFIG, FOOD_SCORES, POWER_UP_SCORE } from '@shared/constants';
+import { DEFAULT_GAME_CONFIG, FOOD_SCORES, POWER_UP_SCORE, PLAYER_COLORS } from '@shared/constants';
 
 export class GameRoom {
   info: RoomInfo;
@@ -18,7 +18,6 @@ export class GameRoom {
   private playerKillCounts: Map<string, number> = new Map();
   private playerStartTimes: Map<string, number> = new Map();
 
-  private colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
   private readonly SPAWN_PROTECTION_TIME = 1000; // 出生/复活保护时间（毫秒）
 
   private isSpawnProtected(snake: SnakeState): boolean {
@@ -46,7 +45,7 @@ export class GameRoom {
 
       // 分配颜色
       const colorIndex = this.playerIds.length - 1;
-      this.playerColors.set(playerId, this.colors[colorIndex % this.colors.length]);
+      this.playerColors.set(playerId, PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
 
       // 存储玩家名称
       if (playerName) {

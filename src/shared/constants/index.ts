@@ -75,6 +75,12 @@ export const FOOD_SCORES = {
   super: 30,
 };
 
+// 食物颜色（与玩家颜色区分）
+export const FOOD_COLORS = {
+  normal: '#FF8C42',  // 橙色
+  super: '#FF69B4',   // 亮粉色（与玩家颜色完全不同）
+};
+
 // 道具分数
 export const POWER_UP_SCORE = 5;
 
