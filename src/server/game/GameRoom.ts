@@ -592,6 +592,13 @@ export class GameRoom {
     snake.respawnTime = Date.now() + DEFAULT_GAME_CONFIG.respawnTime;
     // 清除效果
     snake.effects = [];
+    // 清除所有道具属性
+    snake.speedBoostCount = 0;
+    snake.speedSlowCount = 0;
+    snake.wallPassCount = 0;
+    snake.invincibleCount = 0;
+    // 重置移动累加器
+    snake.moveAccumulator = 0;
   }
 
   private respawnSnake(snake: SnakeState): void {
