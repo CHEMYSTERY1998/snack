@@ -12,11 +12,10 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   powerUpSpawnRate: 0.02, // 每帧生成道具的概率
   respawnTime: 3000, // 复活等待时间 3秒
   powerUpDuration: {
-    speed_boost: 5000,
-    speed_slow: 5000,
-    wall_pass: 8000,
-    invincible: 5000,
-    double_score: 10000,
+    speed_boost: 0, // 永久效果
+    speed_slow: 0, // 永久效果
+    wall_pass: 0, // 次数制
+    invincible: 0, // 次数制
     shrink_opponent: 0, // 即时效果
   },
 };
@@ -27,7 +26,6 @@ export const POWER_UP_ICONS: Record<string, string> = {
   speed_slow: '🐌',
   wall_pass: '👻',
   invincible: '🛡️',
-  double_score: '✨',
   shrink_opponent: '✂️',
 };
 
@@ -37,7 +35,6 @@ export const POWER_UP_NAMES: Record<string, string> = {
   speed_slow: '减速',
   wall_pass: '穿墙',
   invincible: '无敌',
-  double_score: '双倍积分',
   shrink_opponent: '缩短对手',
 };
 

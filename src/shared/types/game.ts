@@ -25,6 +25,11 @@ export interface SnakeState {
   color: string;
   respawnTime?: number; // 复活时间戳，undefined 表示存活
   spawnTime?: number; // 出生/复活时间戳，用于1秒保护期
+  // 道具属性
+  speedBoostCount: number;  // 加速层数（永久）
+  speedSlowCount: number;   // 减速层数（永久）
+  wallPassCount: number;    // 穿墙次数
+  invincibleCount: number;  // 无敌次数
 }
 
 // 食物类型
@@ -40,12 +45,11 @@ export interface FoodState {
 
 // 道具类型
 export type PowerUpType =
-  | 'speed_boost'    // 加速
-  | 'speed_slow'     // 减速
-  | 'wall_pass'      // 穿墙
-  | 'invincible'     // 无敌
-  | 'double_score'   // 双倍积分
-  | 'shrink_opponent'; // 缩短对手
+  | 'speed_boost'    // 加速（永久）
+  | 'speed_slow'     // 减速（永久）
+  | 'wall_pass'      // 穿墙（次数）
+  | 'invincible'     // 无敌（次数）
+  | 'shrink_opponent'; // 缩短对手（即时效果）
 
 // 道具状态
 export interface PowerUpState {
@@ -78,7 +82,6 @@ export interface GameConfig {
     speed_slow: number;
     wall_pass: number;
     invincible: number;
-    double_score: number;
     shrink_opponent: number;
   };
 }
@@ -91,6 +94,7 @@ export interface GameState {
   powerUps: PowerUpState[];
   isRunning: boolean;
   startTime: number;
+  messages: string[]; // 公屏消息
 }
 
 // 玩家输入

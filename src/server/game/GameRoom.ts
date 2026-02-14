@@ -170,6 +170,10 @@ export class GameRoom {
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
         spawnTime: Date.now(),
+        speedBoostCount: 0,
+        speedSlowCount: 0,
+        wallPassCount: 0,
+        invincibleCount: 0,
       };
 
       this.gameState.snakes.push(snake);
@@ -189,6 +193,10 @@ export class GameRoom {
       effects: [],
       color: this.playerColors.get(playerId) || '#FF6B6B',
       spawnTime: Date.now(),
+      speedBoostCount: 0,
+      speedSlowCount: 0,
+      wallPassCount: 0,
+      invincibleCount: 0,
     };
 
     this.gameState.snakes.push(snake);
@@ -254,6 +262,10 @@ export class GameRoom {
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
         spawnTime: Date.now(),
+        speedBoostCount: 0,
+        speedSlowCount: 0,
+        wallPassCount: 0,
+        invincibleCount: 0,
       };
 
       snakes.push(snake);
@@ -282,6 +294,7 @@ export class GameRoom {
       powerUps: [],
       isRunning: true,
       startTime: Date.now(),
+      messages: [],
     };
   }
 
@@ -387,30 +400,33 @@ export class GameRoom {
       };
 
       const vector = dirVectors[snake.direction];
-      const hasWallPass = snake.effects.some(e => e.type === 'wall_pass');
+      const hasWallPass = snake.wallPassCount > 0;
 
       let newHead: Position = {
         x: head.x + vector.x,
         y: head.y + vector.y,
       };
 
-      // 穿墙处理
-      if (hasWallPass) {
+      // 穿墙处理（次数制）
+      if (hasWallPass && !isWithinBounds(newHead, gridWidth, gridHeight)) {
         newHead.x = (newHead.x + gridWidth) % gridWidth;
         newHead.y = (newHead.y + gridHeight) % gridHeight;
-      } else {
-        // 边界碰撞
-        if (!isWithinBounds(newHead, gridWidth, gridHeight)) {
-          this.killSnake(snake);
-          continue;
-        }
+        snake.wallPassCount--; // 使用一次穿墙
+      } else if (!isWithinBounds(newHead, gridWidth, gridHeight)) {
+        // 边界碰撞（没有穿墙次数）
+        this.killSnake(snake);
+        continue;
       }
+
+      // 检查是否有无敌次数
+      const hasInvincible = snake.invincibleCount > 0;
 
       // 自身碰撞 - 排除蛇头和尾巴（尾巴即将移动）
       const bodySegments = snake.segments.slice(1, -1);
       if (bodySegments.some(seg => isSamePosition(seg.position, newHead))) {
-        const hasInvincible = snake.effects.some(e => e.type === 'invincible');
-        if (!hasInvincible) {
+        if (hasInvincible) {
+          snake.invincibleCount--; // 使用一次无敌
+        } else {
           this.killSnake(snake);
           continue;
         }
@@ -426,8 +442,7 @@ export class GameRoom {
         const hitOtherBody = otherSnake.segments.slice(1).some(seg => isSamePosition(seg.position, newHead));
 
         if (hitOtherHead || hitOtherBody) {
-          const hasInvincible = snake.effects.some(e => e.type === 'invincible');
-          const otherHasInvincible = otherSnake.effects.some(e => e.type === 'invincible');
+          const otherHasInvincible = otherSnake.invincibleCount > 0;
           const snakeProtected = this.isSpawnProtected(snake);
           const otherProtected = this.isSpawnProtected(otherSnake);
 
@@ -440,14 +455,20 @@ export class GameRoom {
             // 撞头：双方都死（除非无敌）
             if (!hasInvincible) {
               this.killSnake(snake);
+            } else {
+              snake.invincibleCount--; // 使用一次无敌
             }
             if (!otherHasInvincible) {
               this.killSnake(otherSnake);
+            } else {
+              otherSnake.invincibleCount--; // 使用一次无敌
             }
           } else {
             // 撞到身体：撞人的蛇死亡，被撞的蛇不受影响
             if (!hasInvincible) {
               this.killSnake(snake);
+            } else {
+              snake.invincibleCount--; // 使用一次无敌
             }
           }
         }
@@ -462,8 +483,7 @@ export class GameRoom {
       const foodIndex = this.gameState.foods.findIndex(f => isSamePosition(f.position, newHead));
       if (foodIndex !== -1) {
         const food = this.gameState.foods[foodIndex];
-        const hasDoubleScore = snake.effects.some(e => e.type === 'double_score');
-        snake.score += hasDoubleScore ? food.value * 2 : food.value;
+        snake.score += food.value;
         this.gameState.foods.splice(foodIndex, 1);
         // 吃到食物不删除尾巴，蛇变长
       } else {
@@ -543,27 +563,56 @@ export class GameRoom {
 
     switch (powerUp.type) {
       case 'speed_boost':
+        // 永久加速
+        snake.speedBoostCount++;
+        break;
+
       case 'speed_slow':
+        // 永久减速
+        snake.speedSlowCount++;
+        break;
+
       case 'wall_pass':
+        // 增加穿墙次数
+        snake.wallPassCount++;
+        break;
+
       case 'invincible':
-      case 'double_score':
-        snake.effects.push({
-          type: powerUp.type,
-          endTime: Date.now() + powerUp.duration,
-        });
+        // 增加无敌次数
+        snake.invincibleCount++;
         break;
 
       case 'shrink_opponent':
-        // 缩短其他所有活着的蛇
+        // 随机选择一个其他活着的玩家缩短
         if (this.gameState) {
-          for (const otherSnake of this.gameState.snakes) {
-            if (otherSnake.id !== snake.id && otherSnake.isAlive) {
-              const newLength = Math.max(3, Math.floor(otherSnake.segments.length / 2));
-              otherSnake.segments = otherSnake.segments.slice(0, newLength);
-            }
+          const otherSnakes = this.gameState.snakes.filter(
+            s => s.id !== snake.id && s.isAlive
+          );
+          if (otherSnakes.length > 0) {
+            const targetSnake = otherSnakes[Math.floor(Math.random() * otherSnakes.length)];
+            const oldLength = targetSnake.segments.length;
+            const newLength = Math.max(3, Math.floor(oldLength / 2));
+            targetSnake.segments = targetSnake.segments.slice(0, newLength);
+
+            // 记录公屏消息
+            const attackerName = this.playerNames.get(snake.playerId) || '玩家';
+            const targetName = this.playerNames.get(targetSnake.playerId) || '玩家';
+            this.addGameMessage(`${attackerName} 对 ${targetName} 使用了缩短效果！(${oldLength} → ${newLength})`);
           }
         }
         break;
+    }
+  }
+
+  // 游戏消息列表
+  private readonly MAX_MESSAGES = 5;
+
+  private addGameMessage(message: string): void {
+    if (!this.gameState) return;
+    const formattedMessage = `[${new Date().toLocaleTimeString()}] ${message}`;
+    this.gameState.messages.push(formattedMessage);
+    if (this.gameState.messages.length > this.MAX_MESSAGES) {
+      this.gameState.messages.shift();
     }
   }
 
@@ -622,7 +671,6 @@ export class GameRoom {
         'speed_slow',
         'wall_pass',
         'invincible',
-        'double_score',
         'shrink_opponent',
       ];
       const type = types[Math.floor(Math.random() * types.length)];

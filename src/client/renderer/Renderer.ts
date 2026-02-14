@@ -104,10 +104,10 @@ export class Renderer {
   }
 
   private drawSnake(snake: SnakeState, isLocal: boolean): void {
-    const { segments, color, effects } = snake;
+    const { segments, color, invincibleCount } = snake;
 
     // 检查是否有无敌效果
-    const hasInvincible = effects.some(e => e.type === 'invincible');
+    const hasInvincible = invincibleCount > 0;
 
     segments.forEach((segment, index) => {
       const x = segment.position.x * this.cellSize;
