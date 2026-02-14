@@ -18,6 +18,12 @@ export class GameRoom {
   private playerStartTimes: Map<string, number> = new Map();
 
   private colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
+  private readonly SPAWN_PROTECTION_TIME = 1000; // 出生/复活保护时间（毫秒）
+
+  private isSpawnProtected(snake: SnakeState): boolean {
+    if (!snake.spawnTime) return false;
+    return Date.now() - snake.spawnTime < this.SPAWN_PROTECTION_TIME;
+  }
 
   constructor(info: RoomInfo, config: RoomConfig, password?: string) {
     this.info = info;
@@ -157,6 +163,7 @@ export class GameRoom {
         isAlive: true,
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
+        spawnTime: Date.now(),
       };
 
       this.gameState.snakes.push(snake);
@@ -175,6 +182,7 @@ export class GameRoom {
       isAlive: true,
       effects: [],
       color: this.playerColors.get(playerId) || '#FF6B6B',
+      spawnTime: Date.now(),
     };
 
     this.gameState.snakes.push(snake);
@@ -239,6 +247,7 @@ export class GameRoom {
         isAlive: true,
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
+        spawnTime: Date.now(),
       };
 
       snakes.push(snake);
@@ -413,6 +422,13 @@ export class GameRoom {
         if (hitOtherHead || hitOtherBody) {
           const hasInvincible = snake.effects.some(e => e.type === 'invincible');
           const otherHasInvincible = otherSnake.effects.some(e => e.type === 'invincible');
+          const snakeProtected = this.isSpawnProtected(snake);
+          const otherProtected = this.isSpawnProtected(otherSnake);
+
+          // 如果任何一方在保护期内，跳过碰撞（穿透效果）
+          if (snakeProtected || otherProtected) {
+            continue;
+          }
 
           if (hitOtherHead) {
             // 撞头：双方都死（除非无敌）
@@ -512,6 +528,7 @@ export class GameRoom {
 
     snake.isAlive = true;
     snake.respawnTime = undefined;
+    snake.spawnTime = Date.now();
     snake.effects = [];
   }
 

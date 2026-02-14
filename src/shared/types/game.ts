@@ -24,6 +24,7 @@ export interface SnakeState {
   effects: ActiveEffect[];
   color: string;
   respawnTime?: number; // 复活时间戳，undefined 表示存活
+  spawnTime?: number; // 出生/复活时间戳，用于1秒保护期
 }
 
 // 食物类型
