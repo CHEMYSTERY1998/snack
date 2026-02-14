@@ -4,6 +4,7 @@ import type { Socket } from 'socket.io';
 import type { PlayerManager } from '../core/PlayerManager';
 import type { RoomManager } from '../core/RoomManager';
 import type { Database } from '../persistence/Database';
+import { compressGameState } from '@shared/utils/stateCompression';
 
 export class SocketHandler {
   private io: Server<ClientToServerEvents, ServerToClientEvents>;
@@ -282,13 +283,30 @@ export class SocketHandler {
     // 通知所有玩家游戏开始
     this.io.to(roomId).emit('game:started');
 
-    // 开始状态广播
+    // 状态广播优化：每10帧发送一次完整状态，其余发送压缩状态
+    const FULL_SYNC_INTERVAL = 10; // 每10帧完整同步一次（约500ms）
+    let tickCount = 0;
+
     const interval = setInterval(() => {
       if (gameRoom.gameState) {
-        this.io.to(roomId).emit('game:state', {
-          state: gameRoom.gameState,
-          timestamp: Date.now(),
-        });
+        const timestamp = Date.now();
+        tickCount++;
+
+        // 每 N 帧发送完整状态，其余发送压缩状态
+        if (tickCount % FULL_SYNC_INTERVAL === 0) {
+          // 发送完整状态
+          this.io.to(roomId).emit('game:state', {
+            state: gameRoom.gameState,
+            timestamp,
+          });
+        } else {
+          // 发送压缩状态
+          const compressed = compressGameState(gameRoom.gameState, timestamp);
+          this.io.to(roomId).emit('game:compressed_state', {
+            compressed,
+            timestamp,
+          });
+        }
 
         // 检查游戏是否结束
         if (!gameRoom.gameState.isRunning) {

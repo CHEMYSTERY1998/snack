@@ -1,6 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/types/events';
-import type { PlayerInput } from '@shared/types';
+import type { PlayerInput, GameState } from '@shared/types';
+import type { CompressedGameState } from '@shared/types/delta';
+import { decompressGameState } from '@shared/utils/stateCompression';
 
 type EventCallback<T = unknown> = (data: T) => void;
 
@@ -10,6 +12,7 @@ export class NetworkClient {
   private isConnected = false;
   private latency = 0;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private previousGameState: GameState | null = null; // 用于解压缩
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -43,6 +46,7 @@ export class NetworkClient {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.previousGameState = null;
     }
   }
 
@@ -97,7 +101,15 @@ export class NetworkClient {
 
     // 游戏事件
     this.socket.on('game:state', (data) => {
+      this.previousGameState = data.state; // 保存用于解压缩
       this.emit('game:state', data);
+    });
+
+    this.socket.on('game:compressed_state', (data: { compressed: CompressedGameState; timestamp: number }) => {
+      // 解压缩状态
+      const state = decompressGameState(data.compressed, this.previousGameState || undefined);
+      this.previousGameState = state;
+      this.emit('game:state', { state, timestamp: data.timestamp });
     });
 
     this.socket.on('game:started', () => {
@@ -105,6 +117,7 @@ export class NetworkClient {
     });
 
     this.socket.on('game:ended', (data) => {
+      this.previousGameState = null; // 重置状态缓存
       this.emit('game:ended', data);
     });
 

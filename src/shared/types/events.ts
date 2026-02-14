@@ -1,6 +1,7 @@
 import type { GameState, PlayerInput, GameResult } from './game';
 import type { RoomInfo, RoomState, RoomConfig } from './room';
 import type { PlayerInfo, LeaderboardEntry } from './player';
+import type { CompressedGameState } from './delta';
 
 // 客户端 -> 服务器事件
 export interface ClientToServerEvents {
@@ -46,6 +47,7 @@ export interface ServerToClientEvents {
 
   // 游戏
   'game:state': (data: { state: GameState; timestamp: number }) => void;
+  'game:compressed_state': (data: { compressed: CompressedGameState; timestamp: number }) => void;
   'game:started': () => void;
   'game:ended': (data: { results: GameResult[] }) => void;
   'game:input_ack': (data: { tick: number; direction: string }) => void;
