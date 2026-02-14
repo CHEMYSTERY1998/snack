@@ -84,6 +84,8 @@ function setupEventListeners() {
     uiManager!.setPlayerInfo(data.player);
     game!.setLocalPlayerId(data.player.id);
     uiManager!.showScreen('lobby');
+    // Show latency indicator when connected
+    uiManager!.showLatency();
   });
 
   networkClient.on('room:list', (data: { rooms: RoomInfo[] }) => {
@@ -129,6 +131,16 @@ function setupEventListeners() {
 
   networkClient.on('error', (message: string) => {
     uiManager!.showError('generic', message);
+  });
+
+  // 延时更新
+  networkClient.on('latency', (data: { latency: number }) => {
+    uiManager!.updateLatency(data.latency);
+  });
+
+  // 连接断开时隐藏延时
+  networkClient.on('disconnected', () => {
+    uiManager!.hideLatency();
   });
 }
 

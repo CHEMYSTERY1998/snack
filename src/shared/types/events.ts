@@ -22,6 +22,9 @@ export interface ClientToServerEvents {
 
   // 排行榜
   'leaderboard:get': (data?: { limit?: number }) => void;
+
+  // 延时测量
+  'ping': (data: { timestamp: number }) => void;
 }
 
 // 服务器 -> 客户端事件
@@ -49,6 +52,9 @@ export interface ServerToClientEvents {
 
   // 排行榜
   'leaderboard:data': (data: { entries: LeaderboardEntry[] }) => void;
+
+  // 延时测量
+  'pong': (data: { timestamp: number }) => void;
 }
 
 // 类型导出

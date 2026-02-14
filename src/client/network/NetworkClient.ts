@@ -8,6 +8,8 @@ export class NetworkClient {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
   private eventListeners: Map<string, Set<EventCallback>> = new Map();
   private isConnected = false;
+  private latency = 0;
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -19,6 +21,7 @@ export class NetworkClient {
       this.socket.on('connect', () => {
         this.isConnected = true;
         this.setupEventHandlers();
+        this.startPingLoop();
         resolve();
       });
 
@@ -36,6 +39,7 @@ export class NetworkClient {
 
   disconnect(): void {
     if (this.socket) {
+      this.stopPingLoop();
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
@@ -111,6 +115,12 @@ export class NetworkClient {
     // 排行榜事件
     this.socket.on('leaderboard:data', (data) => {
       this.emit('leaderboard:data', data);
+    });
+
+    // 延时测量
+    this.socket.on('pong', (data) => {
+      this.latency = Math.round((Date.now() - data.timestamp) / 2);
+      this.emit('latency', { latency: this.latency });
     });
   }
 
@@ -193,5 +203,31 @@ export class NetworkClient {
   // 状态
   get connected(): boolean {
     return this.isConnected;
+  }
+
+  get currentLatency(): number {
+    return this.latency;
+  }
+
+  // 延时测量
+  private startPingLoop(): void {
+    this.stopPingLoop();
+    // 每 2 秒发送一次 ping
+    this.pingInterval = setInterval(() => {
+      if (this.socket && this.isConnected) {
+        this.socket.emit('ping', { timestamp: Date.now() });
+      }
+    }, 2000);
+    // 立即发送一次
+    if (this.socket && this.isConnected) {
+      this.socket.emit('ping', { timestamp: Date.now() });
+    }
+  }
+
+  private stopPingLoop(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
   }
 }

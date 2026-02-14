@@ -229,4 +229,35 @@ export class UIManager {
       </div>
     `;
   }
+
+  // 延时显示
+  updateLatency(latency: number): void {
+    const indicator = document.getElementById('latency-indicator');
+    const valueElement = document.getElementById('latency-value');
+    if (!indicator || !valueElement) return;
+
+    indicator.classList.remove('hidden', 'good', 'medium', 'bad');
+
+    let status: 'good' | 'medium' | 'bad';
+    if (latency < 100) {
+      status = 'good';
+    } else if (latency < 200) {
+      status = 'medium';
+    } else {
+      status = 'bad';
+    }
+
+    indicator.classList.add(status);
+    valueElement.textContent = `${latency} ms`;
+  }
+
+  hideLatency(): void {
+    const indicator = document.getElementById('latency-indicator');
+    indicator?.classList.add('hidden');
+  }
+
+  showLatency(): void {
+    const indicator = document.getElementById('latency-indicator');
+    indicator?.classList.remove('hidden');
+  }
 }

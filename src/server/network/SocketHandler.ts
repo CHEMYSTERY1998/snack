@@ -79,6 +79,11 @@ export class SocketHandler {
         this.handleGetLeaderboard(socket, data?.limit);
       });
 
+      // 延时测量
+      socket.on('ping', (data) => {
+        socket.emit('pong', { timestamp: data.timestamp });
+      });
+
       // 断开连接
       socket.on('disconnect', () => {
         this.handleDisconnect(socket);

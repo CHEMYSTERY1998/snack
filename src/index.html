@@ -365,9 +365,69 @@
       text-align: center;
       margin-top: 8px;
     }
+
+    /* 延时指示器 */
+    .latency-indicator {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .latency-indicator.good {
+      background: rgba(78, 205, 196, 0.2);
+      color: #4ECDC4;
+    }
+
+    .latency-indicator.medium {
+      background: rgba(255, 234, 167, 0.2);
+      color: #FFEAA7;
+    }
+
+    .latency-indicator.bad {
+      background: rgba(255, 107, 107, 0.2);
+      color: #FF6B6B;
+    }
+
+    .latency-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    .latency-indicator.good .latency-dot {
+      background: #4ECDC4;
+    }
+
+    .latency-indicator.medium .latency-dot {
+      background: #FFEAA7;
+    }
+
+    .latency-indicator.bad .latency-dot {
+      background: #FF6B6B;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
 </head>
 <body>
+  <!-- 延时指示器 -->
+  <div id="latency-indicator" class="latency-indicator hidden">
+    <span class="latency-dot"></span>
+    <span id="latency-value">-- ms</span>
+  </div>
+
   <div id="app">
     <!-- 登录界面 -->
     <div id="login-screen" class="container">
@@ -428,32 +488,27 @@
             <div class="powerup-item">
               <span class="powerup-icon">⚡</span>
               <span class="powerup-name">加速</span>
-              <span class="powerup-desc">速度+50%，5秒</span>
+              <span class="powerup-desc">永久加速</span>
             </div>
             <div class="powerup-item">
               <span class="powerup-icon">🐌</span>
               <span class="powerup-name">减速</span>
-              <span class="powerup-desc">速度-50%，5秒</span>
+              <span class="powerup-desc">永久减速</span>
             </div>
             <div class="powerup-item">
               <span class="powerup-icon">👻</span>
               <span class="powerup-name">穿墙</span>
-              <span class="powerup-desc">可穿墙，8秒</span>
+              <span class="powerup-desc">可穿墙1次</span>
             </div>
             <div class="powerup-item">
               <span class="powerup-icon">🛡️</span>
               <span class="powerup-name">无敌</span>
-              <span class="powerup-desc">免疫死亡，5秒</span>
-            </div>
-            <div class="powerup-item">
-              <span class="powerup-icon">✨</span>
-              <span class="powerup-name">双倍积分</span>
-              <span class="powerup-desc">分数x2，10秒</span>
+              <span class="powerup-desc">免疫死亡1次</span>
             </div>
             <div class="powerup-item">
               <span class="powerup-icon">✂️</span>
               <span class="powerup-name">缩短对手</span>
-              <span class="powerup-desc">对手长度减半</span>
+              <span class="powerup-desc">随机缩短1人</span>
             </div>
           </div>
           <div class="controls-info">
