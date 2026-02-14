@@ -143,13 +143,14 @@ export class Game {
       const isLocal = snake.playerId === this.localPlayerId;
       const isDead = !snake.isAlive;
       const rank = index + 1;
+      const maxLength = snake.maxLength || snake.segments.length;
 
       return `
         <div class="score-item ${isLocal ? 'local-player' : ''} ${isDead ? 'dead' : ''}">
           <span class="score-rank">#${rank}</span>
           <span class="score-color" style="background: ${snake.color}"></span>
-          <span class="score-name">${isLocal ? '你' : `玩家${rank}`}</span>
-          <span class="score-value">${snake.score}</span>
+          <span class="score-name">${snake.playerName || (isLocal ? '你' : `玩家${rank}`)}</span>
+          <span class="score-value">${snake.score} <span style="font-size:0.7em;color:rgba(255,255,255,0.5)">(${maxLength})</span></span>
         </div>
       `;
     }).join('');

@@ -16,6 +16,7 @@ export interface SnakeSegment {
 export interface SnakeState {
   id: string;
   playerId: string;
+  playerName: string; // 玩家名称
   segments: SnakeSegment[];
   direction: Direction;
   speed: number;
@@ -30,6 +31,7 @@ export interface SnakeState {
   speedSlowCount: number;   // 减速层数（永久）
   wallPassCount: number;    // 穿墙次数
   invincibleCount: number;  // 无敌次数
+  maxLength: number; // 最长长度
 }
 
 // 食物类型

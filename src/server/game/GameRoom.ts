@@ -182,6 +182,7 @@ export class GameRoom {
       const snake: SnakeState = {
         id: generateId(),
         playerId,
+        playerName: this.playerNames.get(playerId) || '玩家',
         segments: segments.map(pos => ({ position: pos })),
         direction,
         speed: 1,
@@ -194,6 +195,7 @@ export class GameRoom {
         speedSlowCount: 0,
         wallPassCount: 0,
         invincibleCount: 0,
+        maxLength: segments.length,
       };
 
       this.gameState.snakes.push(snake);
@@ -205,6 +207,7 @@ export class GameRoom {
     const snake: SnakeState = {
       id: generateId(),
       playerId,
+      playerName: this.playerNames.get(playerId) || '玩家',
       segments: spawn.segments.map(pos => ({ position: pos })),
       direction: spawn.direction,
       speed: 1,
@@ -217,6 +220,7 @@ export class GameRoom {
       speedSlowCount: 0,
       wallPassCount: 0,
       invincibleCount: 0,
+      maxLength: spawn.segments.length,
     };
 
     this.gameState.snakes.push(snake);
@@ -274,6 +278,7 @@ export class GameRoom {
       const snake: SnakeState = {
         id: generateId(),
         playerId,
+        playerName: this.playerNames.get(playerId) || '玩家',
         segments: startPositions.map(pos => ({ position: pos })),
         direction,
         speed: 1,
@@ -286,6 +291,7 @@ export class GameRoom {
         speedSlowCount: 0,
         wallPassCount: 0,
         invincibleCount: 0,
+        maxLength: startPositions.length,
       };
 
       snakes.push(snake);
@@ -506,6 +512,10 @@ export class GameRoom {
         snake.score += food.value;
         this.gameState.foods.splice(foodIndex, 1);
         // 吃到食物不删除尾巴，蛇变长
+        // 更新最长长度
+        if (snake.segments.length > snake.maxLength) {
+          snake.maxLength = snake.segments.length;
+        }
       } else {
         snake.segments.pop();
       }
