@@ -123,13 +123,30 @@ export class Game {
     // 更新分数排行榜
     this.updateScoreList();
 
-    // 更新复活倒计时显示
+    // 更新玩家道具属性
     if (this.localPlayerId) {
       const mySnake = this.gameState.snakes.find((s: SnakeState) => s.playerId === this.localPlayerId);
-      if (mySnake && mySnake.respawnTime) {
-        // 本地玩家正在等待复活
+      if (mySnake) {
+        this.updatePlayerAttributes(mySnake);
+
+        // 更新复活倒计时显示
+        if (mySnake.respawnTime) {
+          // 本地玩家正在等待复活
+        }
       }
     }
+  }
+
+  private updatePlayerAttributes(snake: SnakeState): void {
+    const speedBoostEl = document.getElementById('attr-speed-boost');
+    const speedSlowEl = document.getElementById('attr-speed-slow');
+    const wallPassEl = document.getElementById('attr-wall-pass');
+    const invincibleEl = document.getElementById('attr-invincible');
+
+    if (speedBoostEl) speedBoostEl.textContent = String(snake.speedBoostCount || 0);
+    if (speedSlowEl) speedSlowEl.textContent = String(snake.speedSlowCount || 0);
+    if (wallPassEl) wallPassEl.textContent = String(snake.wallPassCount || 0);
+    if (invincibleEl) invincibleEl.textContent = String(snake.invincibleCount || 0);
   }
 
   private updateScoreList(): void {
