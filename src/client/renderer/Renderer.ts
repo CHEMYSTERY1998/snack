@@ -67,8 +67,8 @@ export class Renderer {
     for (const snake of sortedSnakes) {
       if (snake.isAlive) {
         this.drawSnake(snake, snake.playerId === localPlayerId);
-      } else if (snake.respawnTime) {
-        // 显示复活倒计时
+      } else if (snake.respawnTime && snake.playerId === localPlayerId) {
+        // 只对本地玩家显示复活倒计时
         this.drawRespawnCountdown(snake);
       }
     }
