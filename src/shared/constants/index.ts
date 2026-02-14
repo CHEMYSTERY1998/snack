@@ -5,7 +5,7 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
   gridWidth: 60,
   gridHeight: 40,
   cellSize: 15,
-  gameSpeed: 200, // 200ms = 5 ticks per second，更易控制
+  gameSpeed: 50,
   maxPlayers: 8,
   initialSnakeLength: 3,
   foodSpawnRate: 0.1, // 每帧生成食物的概率
