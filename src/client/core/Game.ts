@@ -83,6 +83,15 @@ export class Game {
   }
 
   updateState(state: GameState): void {
+    // 检查本地蛇的方向是否需要同步（复活后方向可能改变）
+    if (this.localPlayerId) {
+      const mySnake = state.snakes.find(s => s.playerId === this.localPlayerId);
+      if (mySnake && mySnake.isAlive) {
+        // 同步客户端方向状态，防止复活后方向不同步导致输入被阻止
+        this.inputHandler.setCurrentDirection(mySnake.direction);
+      }
+    }
+
     this.gameState = state;
     this.updateHUD();
   }
