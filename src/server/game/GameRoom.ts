@@ -274,16 +274,46 @@ export class GameRoom {
       for (const otherSnake of this.gameState.snakes) {
         if (otherSnake.id === snake.id || !otherSnake.isAlive) continue;
 
-        if (otherSnake.segments.some(seg => isSamePosition(seg.position, newHead))) {
+        // 检查是否撞到其他蛇的头部
+        const hitOtherHead = isSamePosition(otherSnake.segments[0].position, newHead);
+        // 检查是否撞到其他蛇的身体
+        const hitOtherBody = otherSnake.segments.slice(1).some(seg => isSamePosition(seg.position, newHead));
+
+        if (hitOtherHead || hitOtherBody) {
           const hasInvincible = snake.effects.some(e => e.type === 'invincible');
-          if (!hasInvincible) {
-            this.killSnake(snake);
-            // 记录击杀
-            this.playerKillCounts.set(
-              otherSnake.playerId,
-              (this.playerKillCounts.get(otherSnake.playerId) || 0) + 1
-            );
-            continue;
+          const otherHasInvincible = otherSnake.effects.some(e => e.type === 'invincible');
+
+          if (hitOtherHead) {
+            // 撞头：双方都死（除非无敌）
+            if (!hasInvincible) {
+              this.killSnake(snake);
+            }
+            if (!otherHasInvincible) {
+              this.killSnake(otherSnake);
+            }
+          } else {
+            // 撞到身体：被撞的蛇死，撞人的蛇获得1/3长度
+            if (!hasInvincible && !otherHasInvincible) {
+              // 被撞的蛇死亡
+              this.killSnake(otherSnake);
+              // 记录击杀
+              this.playerKillCounts.set(
+                snake.playerId,
+                (this.playerKillCounts.get(snake.playerId) || 0) + 1
+              );
+              // 撞人的蛇获得被撞蛇1/3的长度
+              const gainedLength = Math.floor(otherSnake.segments.length / 3);
+              for (let i = 0; i < gainedLength; i++) {
+                // 在尾部添加新的身体段
+                const tail = snake.segments[snake.segments.length - 1];
+                snake.segments.push({ position: { ...tail.position } });
+              }
+              // 额外加分
+              snake.score += otherSnake.segments.length * 5;
+            } else if (!hasInvincible) {
+              // 撞人的蛇没有无敌但对方有无敌，自己死
+              this.killSnake(snake);
+            }
           }
         }
       }
