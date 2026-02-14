@@ -71,6 +71,7 @@ export interface CompressedSnake {
   maxLength: number;
   respawnTime?: number;
   spawnTime?: number;
+  // moveAccumulator 不传输，仅服务端使用
 }
 
 // 压缩的游戏状态

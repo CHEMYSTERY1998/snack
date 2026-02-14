@@ -92,6 +92,7 @@ export function decompressSnake(
     wallPassCount: compressed.wallPassCount,
     invincibleCount: compressed.invincibleCount,
     maxLength: compressed.maxLength,
+    moveAccumulator: 0, // 客户端不需要此值
   };
 }
 

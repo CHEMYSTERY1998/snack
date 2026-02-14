@@ -197,6 +197,7 @@ export class GameRoom {
         wallPassCount: 0,
         invincibleCount: 0,
         maxLength: segments.length,
+        moveAccumulator: 0,
       };
 
       this.gameState.snakes.push(snake);
@@ -223,6 +224,7 @@ export class GameRoom {
       wallPassCount: 0,
       invincibleCount: 0,
       maxLength: spawn.segments.length,
+      moveAccumulator: 0,
     };
 
     this.gameState.snakes.push(snake);
@@ -312,6 +314,7 @@ export class GameRoom {
         wallPassCount: 0,
         invincibleCount: 0,
         maxLength: startPositions.length,
+        moveAccumulator: 0,
       };
 
       snakes.push(snake);
@@ -431,6 +434,16 @@ export class GameRoom {
 
     for (const snake of this.gameState.snakes) {
       if (!snake.isAlive || snake.isPaused) continue;
+
+      // 计算速度倍率（每次加速+20%，每次减速-20%，最低0.2倍）
+      const speedMultiplier = Math.max(0.2, 1 + 0.2 * snake.speedBoostCount - 0.2 * snake.speedSlowCount);
+
+      // 累加移动
+      snake.moveAccumulator += speedMultiplier;
+
+      // 当累加器 >= 1 时才移动
+      if (snake.moveAccumulator < 1) continue;
+      snake.moveAccumulator -= 1;
 
       // 更新效果
       const now = Date.now();

@@ -33,6 +33,7 @@ export interface SnakeState {
   wallPassCount: number;    // 穿墙次数
   invincibleCount: number;  // 无敌次数
   maxLength: number; // 最长长度
+  moveAccumulator: number; // 移动累加器（用于变速）
 }
 
 // 食物类型
