@@ -118,20 +118,41 @@ export class Game {
   }
 
   private updateHUD(): void {
-    if (!this.gameState || !this.localPlayerId) return;
+    if (!this.gameState) return;
 
-    const mySnake = this.gameState.snakes.find((s: SnakeState) => s.playerId === this.localPlayerId);
-    if (!mySnake) return;
+    // 更新分数排行榜
+    this.updateScoreList();
 
-    const scoreElement = document.getElementById('hud-score');
-    const lengthElement = document.getElementById('hud-length');
-
-    if (scoreElement) {
-      scoreElement.textContent = mySnake.score.toString();
+    // 更新复活倒计时显示
+    if (this.localPlayerId) {
+      const mySnake = this.gameState.snakes.find((s: SnakeState) => s.playerId === this.localPlayerId);
+      if (mySnake && mySnake.respawnTime) {
+        // 本地玩家正在等待复活
+      }
     }
-    if (lengthElement) {
-      lengthElement.textContent = mySnake.segments.length.toString();
-    }
+  }
+
+  private updateScoreList(): void {
+    const scoreListElement = document.getElementById('score-list');
+    if (!scoreListElement || !this.gameState) return;
+
+    // 按分数排序蛇
+    const sortedSnakes = [...this.gameState.snakes].sort((a, b) => b.score - a.score);
+
+    scoreListElement.innerHTML = sortedSnakes.map((snake, index) => {
+      const isLocal = snake.playerId === this.localPlayerId;
+      const isDead = !snake.isAlive;
+      const rank = index + 1;
+
+      return `
+        <div class="score-item ${isLocal ? 'local-player' : ''} ${isDead ? 'dead' : ''}">
+          <span class="score-rank">#${rank}</span>
+          <span class="score-color" style="background: ${snake.color}"></span>
+          <span class="score-name">${isLocal ? '你' : `玩家${rank}`}</span>
+          <span class="score-value">${snake.score}</span>
+        </div>
+      `;
+    }).join('');
   }
 
   private updateHUDTime(elapsed: number): void {

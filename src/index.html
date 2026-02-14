@@ -120,9 +120,165 @@
       gap: 16px;
     }
 
+    /* 游戏布局 */
+    .game-layout {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    /* 左侧分数面板 */
+    .score-panel {
+      width: 200px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .score-panel h3 {
+      color: #4ECDC4;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+    }
+
+    #score-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .score-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .score-item.local-player {
+      background: rgba(78, 205, 196, 0.2);
+      border: 1px solid rgba(78, 205, 196, 0.4);
+    }
+
+    .score-item.dead {
+      opacity: 0.5;
+    }
+
+    .score-rank {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+      width: 20px;
+    }
+
+    .score-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .score-name {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-value {
+      font-weight: bold;
+      color: #4ECDC4;
+    }
+
+    .game-timer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    /* 中间游戏画布 */
+    .game-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     #game-canvas {
       border-radius: 8px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 右侧道具面板 */
+    .powerup-panel {
+      width: 180px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .powerup-panel h3 {
+      color: #4ECDC4;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+    }
+
+    .powerup-list {
+      flex: 1;
+    }
+
+    .powerup-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .powerup-icon {
+      font-size: 1.2rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .powerup-name {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.9);
+      width: 50px;
+    }
+
+    .powerup-desc {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .controls-info {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .controls-info h4 {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 4px;
+    }
+
+    .controls-info p {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
     }
 
     .game-hud {
@@ -249,21 +405,63 @@
 
     <!-- 游戏界面 -->
     <div id="game-screen" class="hidden">
-      <div class="game-hud">
-        <div class="hud-item">
-          <span class="hud-label">分数</span>
-          <span id="hud-score" class="hud-value">0</span>
+      <div class="game-layout">
+        <!-- 左侧分数面板 -->
+        <div class="score-panel">
+          <h3>排行榜</h3>
+          <div id="score-list"></div>
+          <div class="game-timer">
+            <span class="hud-label">游戏时间</span>
+            <span id="hud-time" class="hud-value">00:00</span>
+          </div>
         </div>
-        <div class="hud-item">
-          <span class="hud-label">长度</span>
-          <span id="hud-length" class="hud-value">3</span>
+
+        <!-- 中间游戏画布 -->
+        <div class="game-center">
+          <canvas id="game-canvas"></canvas>
         </div>
-        <div class="hud-item">
-          <span class="hud-label">时间</span>
-          <span id="hud-time" class="hud-value">00:00</span>
+
+        <!-- 右侧道具说明 -->
+        <div class="powerup-panel">
+          <h3>道具说明</h3>
+          <div class="powerup-list">
+            <div class="powerup-item">
+              <span class="powerup-icon">⚡</span>
+              <span class="powerup-name">加速</span>
+              <span class="powerup-desc">速度+50%，5秒</span>
+            </div>
+            <div class="powerup-item">
+              <span class="powerup-icon">🐌</span>
+              <span class="powerup-name">减速</span>
+              <span class="powerup-desc">速度-50%，5秒</span>
+            </div>
+            <div class="powerup-item">
+              <span class="powerup-icon">👻</span>
+              <span class="powerup-name">穿墙</span>
+              <span class="powerup-desc">可穿墙，8秒</span>
+            </div>
+            <div class="powerup-item">
+              <span class="powerup-icon">🛡️</span>
+              <span class="powerup-name">无敌</span>
+              <span class="powerup-desc">免疫死亡，5秒</span>
+            </div>
+            <div class="powerup-item">
+              <span class="powerup-icon">✨</span>
+              <span class="powerup-name">双倍积分</span>
+              <span class="powerup-desc">分数x2，10秒</span>
+            </div>
+            <div class="powerup-item">
+              <span class="powerup-icon">✂️</span>
+              <span class="powerup-name">缩短对手</span>
+              <span class="powerup-desc">对手长度减半</span>
+            </div>
+          </div>
+          <div class="controls-info">
+            <h4>操作说明</h4>
+            <p>方向键 / WASD 控制移动</p>
+          </div>
         </div>
       </div>
-      <canvas id="game-canvas"></canvas>
     </div>
 
     <!-- 游戏结束界面 -->
