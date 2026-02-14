@@ -1,6 +1,6 @@
 import type { RoomInfo, RoomState, RoomConfig } from '@shared/types/room';
 import type { GameState, SnakeState, FoodState, PowerUpState, Position, Direction, PlayerInput, PowerUpType, GameResult } from '@shared/types/game';
-import { generateId, randomUnoccupiedPosition, isSamePosition, isWithinBounds, getOppositeDirection } from '@shared/utils';
+import { generateId, randomUnoccupiedPosition, isSamePosition, isWithinBounds, getOppositeDirection, isPositionOccupied } from '@shared/utils';
 import { DEFAULT_GAME_CONFIG, FOOD_SCORES, POWER_UP_SCORE } from '@shared/constants';
 
 export class GameRoom {
@@ -53,43 +53,123 @@ export class GameRoom {
     }
   }
 
+  // 生成随机出生位置和方向
+  private getRandomSpawnPosition(): { headPos: Position; direction: Direction; segments: Position[] } | null {
+    if (!this.gameState) return null;
+
+    const gridWidth = this.config.mapWidth;
+    const gridHeight = this.config.mapHeight;
+    const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+    const margin = 5;
+
+    // 获取所有已占用的位置（排除死亡蛇）
+    const occupiedPositions = [
+      ...this.gameState.snakes.filter(s => s.isAlive).flatMap(s => s.segments.map(seg => seg.position)),
+      ...this.gameState.foods.map(f => f.position),
+      ...this.gameState.powerUps.map(p => p.position),
+    ];
+
+    const directions: Direction[] = ['up', 'down', 'left', 'right'];
+    const dirVectors: Record<Direction, Position> = {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+
+    // 尝试多次找到合适的位置
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const direction = directions[Math.floor(Math.random() * directions.length)];
+      const vector = dirVectors[direction];
+
+      // 确保蛇头位置留有足够空间放置整个身体
+      const minX = margin + (vector.x > 0 ? 0 : length - 1);
+      const maxX = gridWidth - margin - 1 - (vector.x < 0 ? 0 : length - 1);
+      const minY = margin + (vector.y > 0 ? 0 : length - 1);
+      const maxY = gridHeight - margin - 1 - (vector.y < 0 ? 0 : length - 1);
+
+      if (maxX < minX || maxY < minY) continue;
+
+      const headX = minX + Math.floor(Math.random() * (maxX - minX + 1));
+      const headY = minY + Math.floor(Math.random() * (maxY - minY + 1));
+      const headPos = { x: headX, y: headY };
+
+      // 生成身体段（尾巴在方向的反方向）
+      const segments: Position[] = [];
+      let valid = true;
+
+      for (let i = 0; i < length; i++) {
+        const segX = headX - vector.x * i;
+        const segY = headY - vector.y * i;
+        const segPos = { x: segX, y: segY };
+
+        // 检查是否与已占用位置冲突
+        if (isPositionOccupied(segPos, occupiedPositions)) {
+          valid = false;
+          break;
+        }
+        segments.push(segPos);
+      }
+
+      if (valid) {
+        return { headPos, direction, segments };
+      }
+    }
+
+    return null;
+  }
+
   // 为游戏中加入的玩家创建蛇
   addSnakeForPlayer(playerId: string): void {
     if (!this.gameState) return;
 
-    const gridWidth = this.config.mapWidth;
-    const gridHeight = this.config.mapHeight;
-    const playerIndex = this.playerIds.indexOf(playerId);
     const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+    const spawn = this.getRandomSpawnPosition();
 
-    // 找一个安全的复活位置
-    const margin = 10;
-    const corners = [
-      { x: margin + length, y: margin + length, dir: 'right' as Direction },
-      { x: gridWidth - margin - length, y: margin + length, dir: 'left' as Direction },
-      { x: gridWidth - margin - length, y: gridHeight - margin - length, dir: 'left' as Direction },
-      { x: margin + length, y: gridHeight - margin - length, dir: 'right' as Direction },
-    ];
+    if (!spawn) {
+      // 如果找不到随机位置，使用备用方案（固定向右方向，确保安全）
+      const gridWidth = this.config.mapWidth;
+      const gridHeight = this.config.mapHeight;
+      const margin = 5;
+      const direction: Direction = 'right';
 
-    const corner = corners[playerIndex % 4];
+      // 向右方向：确保头部右边有空间
+      const minX = margin + length - 1;
+      const maxX = gridWidth - margin - 1;
+      const minY = margin;
+      const maxY = gridHeight - margin - 1;
 
-    // 生成身体段
-    const positions: Position[] = [];
-    if (corner.dir === 'right') {
+      const x = minX + Math.floor(Math.random() * (maxX - minX + 1));
+      const y = minY + Math.floor(Math.random() * (maxY - minY + 1));
+
+      const segments: Position[] = [];
       for (let i = 0; i < length; i++) {
-        positions.push({ x: corner.x - i, y: corner.y });
+        segments.push({ x: x - i, y: y });
       }
-    } else {
-      for (let i = 0; i < length; i++) {
-        positions.push({ x: corner.x + i, y: corner.y });
-      }
+
+      const snake: SnakeState = {
+        id: generateId(),
+        playerId,
+        segments: segments.map(pos => ({ position: pos })),
+        direction,
+        speed: 1,
+        score: 0,
+        isAlive: true,
+        effects: [],
+        color: this.playerColors.get(playerId) || '#FF6B6B',
+      };
+
+      this.gameState.snakes.push(snake);
+      this.playerStartTimes.set(playerId, Date.now());
+      this.playerKillCounts.set(playerId, 0);
+      return;
     }
 
     const snake: SnakeState = {
       id: generateId(),
       playerId,
-      segments: positions.map(pos => ({ position: pos })),
-      direction: corner.dir,
+      segments: spawn.segments.map(pos => ({ position: pos })),
+      direction: spawn.direction,
       speed: 1,
       score: 0,
       isAlive: true,
@@ -418,37 +498,36 @@ export class GameRoom {
   }
 
   private respawnSnake(snake: SnakeState): void {
-    const gridWidth = this.config.mapWidth;
-    const gridHeight = this.config.mapHeight;
-    const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+    const spawn = this.getRandomSpawnPosition();
 
-    // 找一个安全的复活位置
-    const margin = 10;
-    const corners = [
-      { x: margin + length, y: margin + length, dir: 'right' as Direction },
-      { x: gridWidth - margin - length, y: margin + length, dir: 'left' as Direction },
-      { x: gridWidth - margin - length, y: gridHeight - margin - length, dir: 'left' as Direction },
-      { x: margin + length, y: gridHeight - margin - length, dir: 'right' as Direction },
-    ];
-
-    // 根据玩家索引选择角落
-    const playerIndex = this.playerIds.indexOf(snake.playerId);
-    const corner = corners[playerIndex % 4];
-
-    // 生成新的身体段
-    const positions: Position[] = [];
-    if (corner.dir === 'right') {
-      for (let i = 0; i < length; i++) {
-        positions.push({ x: corner.x - i, y: corner.y });
-      }
+    if (spawn) {
+      snake.segments = spawn.segments.map(pos => ({ position: pos }));
+      snake.direction = spawn.direction;
     } else {
+      // 备用方案：固定向右方向，确保安全
+      const gridWidth = this.config.mapWidth;
+      const gridHeight = this.config.mapHeight;
+      const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+      const margin = 5;
+      const direction: Direction = 'right';
+
+      const minX = margin + length - 1;
+      const maxX = gridWidth - margin - 1;
+      const minY = margin;
+      const maxY = gridHeight - margin - 1;
+
+      const x = minX + Math.floor(Math.random() * (maxX - minX + 1));
+      const y = minY + Math.floor(Math.random() * (maxY - minY + 1));
+
+      const segments: Position[] = [];
       for (let i = 0; i < length; i++) {
-        positions.push({ x: corner.x + i, y: corner.y });
+        segments.push({ x: x - i, y: y });
       }
+
+      snake.segments = segments.map(pos => ({ position: pos }));
+      snake.direction = direction;
     }
 
-    snake.segments = positions.map(pos => ({ position: pos }));
-    snake.direction = corner.dir;
     snake.isAlive = true;
     snake.respawnTime = undefined;
     snake.effects = [];
