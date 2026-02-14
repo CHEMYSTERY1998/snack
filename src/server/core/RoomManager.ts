@@ -57,9 +57,7 @@ export class RoomManager {
       return { success: false, error: '房间不存在' };
     }
 
-    if (room.info.status !== 'waiting') {
-      return { success: false, error: '游戏已开始' };
-    }
+    // 允许随时加入，不再检查游戏状态
 
     if (room.info.hasPassword && room.password !== password) {
       return { success: false, error: '密码错误' };
@@ -70,6 +68,12 @@ export class RoomManager {
     }
 
     room.addPlayer(playerId);
+
+    // 如果游戏正在进行，为新玩家创建蛇
+    if (room.info.status === 'playing') {
+      room.addSnakeForPlayer(playerId);
+    }
+
     return { success: true };
   }
 
@@ -93,7 +97,7 @@ export class RoomManager {
 
   getRoomList(): RoomInfo[] {
     return Array.from(this.rooms.values())
-      .filter(room => room.info.status === 'waiting') // 只显示等待中的房间
+      .filter(room => room.info.status !== 'finished') // 显示所有非结束的房间
       .map(room => room.info);
   }
 

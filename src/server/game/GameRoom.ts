@@ -53,6 +53,57 @@ export class GameRoom {
     }
   }
 
+  // 为游戏中加入的玩家创建蛇
+  addSnakeForPlayer(playerId: string): void {
+    if (!this.gameState) return;
+
+    const gridWidth = this.config.mapWidth;
+    const gridHeight = this.config.mapHeight;
+    const playerIndex = this.playerIds.indexOf(playerId);
+    const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
+
+    // 找一个安全的复活位置
+    const margin = 10;
+    const corners = [
+      { x: margin + length, y: margin + length, dir: 'right' as Direction },
+      { x: gridWidth - margin - length, y: margin + length, dir: 'left' as Direction },
+      { x: gridWidth - margin - length, y: gridHeight - margin - length, dir: 'left' as Direction },
+      { x: margin + length, y: gridHeight - margin - length, dir: 'right' as Direction },
+    ];
+
+    const corner = corners[playerIndex % 4];
+
+    // 生成身体段
+    const positions: Position[] = [];
+    if (corner.dir === 'right') {
+      for (let i = 0; i < length; i++) {
+        positions.push({ x: corner.x - i, y: corner.y });
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        positions.push({ x: corner.x + i, y: corner.y });
+      }
+    }
+
+    const snake: SnakeState = {
+      id: generateId(),
+      playerId,
+      segments: positions.map(pos => ({ position: pos })),
+      direction: corner.dir,
+      speed: 1,
+      score: 0,
+      isAlive: true,
+      effects: [],
+      color: this.playerColors.get(playerId) || '#FF6B6B',
+    };
+
+    this.gameState.snakes.push(snake);
+
+    // 初始化玩家数据
+    this.playerStartTimes.set(playerId, Date.now());
+    this.playerKillCounts.set(playerId, 0);
+  }
+
   startGame(): void {
     if (this.playerIds.length < 1) return;
 

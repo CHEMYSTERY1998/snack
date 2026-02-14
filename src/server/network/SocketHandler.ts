@@ -165,8 +165,18 @@ export class SocketHandler {
     const roomState = this.roomManager.getRoomState(roomId);
     const players = this.playerManager.getPlayersByRoom(roomId);
     const player = this.playerManager.getPlayer(playerId);
+    const gameRoom = this.roomManager.getRoom(roomId);
 
     socket.emit('room:joined', { room: roomState!, players });
+
+    // 如果游戏正在进行，立即发送游戏状态并通知开始游戏
+    if (gameRoom && gameRoom.info.status === 'playing' && gameRoom.gameState) {
+      socket.emit('game:started');
+      socket.emit('game:state', {
+        state: gameRoom.gameState,
+        timestamp: Date.now(),
+      });
+    }
 
     // 通知房间内其他人
     socket.to(roomId).emit('room:player_joined', { player: player! });
