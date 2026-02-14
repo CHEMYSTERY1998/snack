@@ -257,15 +257,23 @@ export class GameRoom {
     this.info.status = 'waiting';
   }
 
+  // 方向锁定（防止同一tick内多次转向）
+  private playerDirectionLocked: Map<string, boolean> = new Map();
+
   handleInput(playerId: string, input: PlayerInput): void {
     if (!this.gameState) return;
 
     const snake = this.gameState.snakes.find(s => s.playerId === playerId);
     if (!snake || !snake.isAlive || snake.isPaused) return;
 
+    // 检查本tick是否已经改变过方向
+    if (this.playerDirectionLocked.get(playerId)) return;
+
     // 防止 180° 转向
     if (getOppositeDirection(snake.direction) !== input.direction) {
       snake.direction = input.direction;
+      // 锁定方向直到下一个tick
+      this.playerDirectionLocked.set(playerId, true);
     }
   }
 
@@ -398,6 +406,9 @@ export class GameRoom {
     if (!this.gameState || !this.gameState.isRunning) return;
 
     this.gameState.tick++;
+
+    // 清除方向锁定，允许本tick改变方向
+    this.playerDirectionLocked.clear();
 
     // 检查并复活死亡的蛇
     this.checkRespawns();
@@ -633,9 +644,11 @@ export class GameRoom {
     }
 
     snake.isAlive = true;
+    snake.isPaused = false; // 确保复活后不是暂停状态
     snake.respawnTime = undefined;
     snake.spawnTime = Date.now();
     snake.effects = [];
+    snake.moveAccumulator = 0; // 重置移动累加器
   }
 
   private applyPowerUp(snake: SnakeState, powerUp: PowerUpState): void {
