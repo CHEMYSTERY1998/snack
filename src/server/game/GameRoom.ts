@@ -346,6 +346,19 @@ export class GameRoom {
   }
 
   private killSnake(snake: SnakeState): void {
+    // 将蛇的身体转换为食物
+    if (this.gameState) {
+      for (const segment of snake.segments) {
+        // 每个身体段变成一个食物
+        this.gameState.foods.push({
+          id: generateId(),
+          position: { ...segment.position },
+          type: 'normal',
+          value: FOOD_SCORES.normal,
+        });
+      }
+    }
+
     snake.isAlive = false;
     // 设置复活时间
     snake.respawnTime = Date.now() + DEFAULT_GAME_CONFIG.respawnTime;
