@@ -32,6 +32,7 @@ export interface SnakeState {
   speedSlowCount: number;   // 减速层数（永久）
   wallPassCount: number;    // 穿墙次数
   invincibleCount: number;  // 无敌次数
+  magnetCount: number;      // 磁铁次数
   maxLength: number; // 最长长度
   moveAccumulator: number; // 移动累加器（用于变速）
 }
@@ -53,7 +54,8 @@ export type PowerUpType =
   | 'speed_slow'     // 减速（永久）
   | 'wall_pass'      // 穿墙（次数）
   | 'invincible'     // 无敌（次数）
-  | 'shrink_opponent'; // 缩短对手（即时效果）
+  | 'shrink_opponent' // 缩短对手（即时效果）
+  | 'magnet';        // 磁铁（次数）
 
 // 道具状态
 export interface PowerUpState {
@@ -88,6 +90,7 @@ export interface GameConfig {
     wall_pass: number;
     invincible: number;
     shrink_opponent: number;
+    magnet: number;
   };
 }
 

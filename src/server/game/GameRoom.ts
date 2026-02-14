@@ -19,6 +19,7 @@ export class GameRoom {
   private playerStartTimes: Map<string, number> = new Map();
 
   private readonly SPAWN_PROTECTION_TIME = 1000; // 出生/复活保护时间（毫秒）
+  private readonly MAGNET_RANGE = 6; // 磁铁吸引范围（格子数）
 
   private isSpawnProtected(snake: SnakeState): boolean {
     if (!snake.spawnTime) return false;
@@ -196,6 +197,7 @@ export class GameRoom {
         speedSlowCount: 0,
         wallPassCount: 0,
         invincibleCount: 0,
+        magnetCount: 0,
         maxLength: segments.length,
         moveAccumulator: 0,
       };
@@ -223,6 +225,7 @@ export class GameRoom {
       speedSlowCount: 0,
       wallPassCount: 0,
       invincibleCount: 0,
+      magnetCount: 0,
       maxLength: spawn.segments.length,
       moveAccumulator: 0,
     };
@@ -321,6 +324,7 @@ export class GameRoom {
         speedSlowCount: 0,
         wallPassCount: 0,
         invincibleCount: 0,
+        magnetCount: 0,
         maxLength: startPositions.length,
         moveAccumulator: 0,
       };
@@ -415,6 +419,9 @@ export class GameRoom {
 
     // 更新所有蛇
     this.updateSnakes();
+
+    // 磁铁效果：吸引附近食物
+    this.applyMagnetEffect();
 
     // 生成食物
     this.spawnFood();
@@ -582,6 +589,44 @@ export class GameRoom {
     }
   }
 
+  /**
+   * 磁铁效果：每 tick 将附近食物向蛇头移动一格
+   * 每次磁铁次数可持续一个 tick，吸引范围内的所有食物
+   */
+  private applyMagnetEffect(): void {
+    if (!this.gameState) return;
+
+    for (const snake of this.gameState.snakes) {
+      if (!snake.isAlive || snake.isPaused || snake.magnetCount <= 0) continue;
+
+      const head = snake.segments[0].position;
+      let attractedAny = false;
+
+      // 找到范围内的食物并吸引
+      for (const food of this.gameState.foods) {
+        const dx = food.position.x - head.x;
+        const dy = food.position.y - head.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // 在吸引范围内（距离 > 1 格才需要吸引）
+        if (distance <= this.MAGNET_RANGE && distance > 1) {
+          // 向蛇头方向移动一格
+          const moveX = dx > 0 ? -1 : dx < 0 ? 1 : 0;
+          const moveY = dy > 0 ? -1 : dy < 0 ? 1 : 0;
+
+          food.position.x += moveX;
+          food.position.y += moveY;
+          attractedAny = true;
+        }
+      }
+
+      // 每tick消耗一次磁铁次数（如果有吸引到任何食物）
+      if (attractedAny) {
+        snake.magnetCount--;
+      }
+    }
+  }
+
   private killSnake(snake: SnakeState): void {
     // 将蛇的身体转换为食物
     if (this.gameState) {
@@ -606,6 +651,7 @@ export class GameRoom {
     snake.speedSlowCount = 0;
     snake.wallPassCount = 0;
     snake.invincibleCount = 0;
+    snake.magnetCount = 0;
     // 重置移动累加器
     snake.moveAccumulator = 0;
   }
@@ -705,6 +751,12 @@ export class GameRoom {
             this.addGameMessage(`${noTargetName} 获得了 ${powerUpName}，但没有目标！`);
           }
         }
+        break;
+
+      case 'magnet':
+        // 增加磁铁次数
+        snake.magnetCount++;
+        this.addGameMessage(`${playerName} 获得了 ${powerUpName}（剩余${snake.magnetCount}次）！`);
         break;
     }
   }
@@ -807,6 +859,7 @@ export class GameRoom {
         'wall_pass',
         'invincible',
         'shrink_opponent',
+        'magnet',
       ];
       const type = types[Math.floor(Math.random() * types.length)];
 

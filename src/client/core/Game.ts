@@ -234,11 +234,13 @@ export class Game {
     const speedSlowEl = document.getElementById('attr-speed-slow');
     const wallPassEl = document.getElementById('attr-wall-pass');
     const invincibleEl = document.getElementById('attr-invincible');
+    const magnetEl = document.getElementById('attr-magnet');
 
     if (speedBoostEl) speedBoostEl.textContent = String(snake.speedBoostCount || 0);
     if (speedSlowEl) speedSlowEl.textContent = String(snake.speedSlowCount || 0);
     if (wallPassEl) wallPassEl.textContent = String(snake.wallPassCount || 0);
     if (invincibleEl) invincibleEl.textContent = String(snake.invincibleCount || 0);
+    if (magnetEl) magnetEl.textContent = String(snake.magnetCount || 0);
   }
 
   private updateScoreList(): void {

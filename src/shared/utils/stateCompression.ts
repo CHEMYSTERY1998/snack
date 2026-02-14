@@ -23,6 +23,7 @@ export function compressSnake(snake: SnakeState): CompressedSnake {
     speedSlowCount: snake.speedSlowCount,
     wallPassCount: snake.wallPassCount,
     invincibleCount: snake.invincibleCount,
+    magnetCount: snake.magnetCount,
     maxLength: snake.maxLength,
     respawnTime: snake.respawnTime,
     spawnTime: snake.spawnTime,
@@ -91,6 +92,7 @@ export function decompressSnake(
     speedSlowCount: compressed.speedSlowCount,
     wallPassCount: compressed.wallPassCount,
     invincibleCount: compressed.invincibleCount,
+    magnetCount: compressed.magnetCount,
     maxLength: compressed.maxLength,
     moveAccumulator: 0, // 客户端不需要此值
   };

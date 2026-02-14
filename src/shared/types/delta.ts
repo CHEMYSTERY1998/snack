@@ -23,6 +23,7 @@ export interface SnakeDelta {
   speedSlowCount?: number;
   wallPassCount?: number;
   invincibleCount?: number;
+  magnetCount?: number;
   maxLength?: number;
 }
 
@@ -68,6 +69,7 @@ export interface CompressedSnake {
   speedSlowCount: number;
   wallPassCount: number;
   invincibleCount: number;
+  magnetCount: number;
   maxLength: number;
   respawnTime?: number;
   spawnTime?: number;

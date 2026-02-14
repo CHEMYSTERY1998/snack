@@ -17,6 +17,7 @@ export const DEFAULT_GAME_CONFIG: GameConfig = {
     wall_pass: 0, // 次数制
     invincible: 0, // 次数制
     shrink_opponent: 0, // 即时效果
+    magnet: 0, // 次数制
   },
 };
 
@@ -27,6 +28,7 @@ export const POWER_UP_ICONS: Record<string, string> = {
   wall_pass: '👻',
   invincible: '🛡️',
   shrink_opponent: '✂️',
+  magnet: '🧲',
 };
 
 // 道具名称映射
@@ -36,6 +38,7 @@ export const POWER_UP_NAMES: Record<string, string> = {
   wall_pass: '穿墙',
   invincible: '无敌',
   shrink_opponent: '缩短对手',
+  magnet: '磁铁',
 };
 
 // 方向向量
@@ -57,7 +60,7 @@ export const OPPOSITE_DIRECTIONS = {
 // 玩家颜色列表
 export const PLAYER_COLORS = [
   '#FF6B6B', // 红色
-  '#4ECDC4', // 青色
+  '#0e7871', // 青色
   '#45B7D1', // 蓝色
   '#96CEB4', // 绿色
   '#FFEAA7', // 黄色
