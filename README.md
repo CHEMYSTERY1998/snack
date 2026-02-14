@@ -32,7 +32,7 @@ npm run dev
 
 # 或分别启动
 npm run dev:client   # 客户端 http://localhost:5173
-npm run dev:server   # 服务端 ws://localhost:3000
+npm run dev:server   # 服务端 ws://localhost:8080
 ```
 
 ### 生产构建
@@ -81,13 +81,13 @@ http://你的IP地址:5173
 ```bash
 # 管理员权限运行
 netsh advfirewall firewall add rule name="Snake Game" dir=in action=allow protocol=tcp localport=5173
-netsh advfirewall firewall add rule name="Snake Game" dir=in action=allow protocol=tcp localport=3000
+netsh advfirewall firewall add rule name="Snake Game" dir=in action=allow protocol=tcp localport=8080
 ```
 
 **Linux (ufw):**
 ```bash
 sudo ufw allow 5173
-sudo ufw allow 3000
+sudo ufw allow 8080
 ```
 
 ## 游戏操作
