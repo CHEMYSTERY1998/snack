@@ -62,6 +62,7 @@ export interface CompressedSnake {
   // 其他状态
   score: number;
   isAlive: boolean;
+  isPaused: boolean;
   effects: string[]; // ActiveEffect JSON 字符串数组
   speedBoostCount: number;
   speedSlowCount: number;

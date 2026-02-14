@@ -75,6 +75,11 @@ export class SocketHandler {
         this.handleGameReady(socket);
       });
 
+      // 暂停/继续
+      socket.on('game:pause', () => {
+        this.handleGamePause(socket);
+      });
+
       // 获取排行榜
       socket.on('leaderboard:get', (data) => {
         this.handleGetLeaderboard(socket, data?.limit);
@@ -353,6 +358,24 @@ export class SocketHandler {
 
   private handleGameReady(_socket: Socket<ClientToServerEvents, ServerToClientEvents>): void {
     // 可以用于同步所有玩家准备状态
+  }
+
+  private handleGamePause(socket: Socket<ClientToServerEvents, ServerToClientEvents>): void {
+    const playerId = this.socketPlayerMap.get(socket.id);
+    if (!playerId) return;
+
+    const player = this.playerManager.getPlayer(playerId);
+    const roomId = player?.currentRoomId;
+
+    if (!roomId) return;
+
+    const gameRoom = this.roomManager.getRoom(roomId);
+    if (!gameRoom || !gameRoom.gameState?.isRunning) return;
+
+    const isPaused = gameRoom.togglePause(playerId);
+
+    // 通知玩家暂停状态变化
+    socket.emit('game:pause_changed', { isPaused });
   }
 
   private handleGetLeaderboard(socket: Socket<ClientToServerEvents, ServerToClientEvents>, limit?: number): void {

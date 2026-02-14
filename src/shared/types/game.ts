@@ -22,6 +22,7 @@ export interface SnakeState {
   speed: number;
   score: number;
   isAlive: boolean;
+  isPaused: boolean; // 是否暂停
   effects: ActiveEffect[];
   color: string;
   respawnTime?: number; // 复活时间戳，undefined 表示存活

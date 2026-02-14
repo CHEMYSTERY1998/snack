@@ -452,6 +452,56 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* 暂停按钮 */
+    .pause-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px 16px;
+      background: linear-gradient(90deg, #9b59b6, #8e44ad);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .pause-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4);
+    }
+
+    .pause-btn.paused {
+      background: linear-gradient(90deg, #27ae60, #2ecc71);
+    }
+
+    /* 暂停遮罩 */
+    .pause-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .pause-overlay h2 {
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .pause-overlay p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -463,6 +513,13 @@
 
   <!-- 游戏消息 -->
   <div id="game-messages" class="game-messages hidden"></div>
+
+  <!-- 暂停遮罩 -->
+  <div id="pause-overlay" class="pause-overlay hidden">
+    <h2>⏸️ 游戏已暂停</h2>
+    <p>按 P 键或点击继续按钮恢复游戏</p>
+    <p style="margin-top: 8px; font-size: 0.9rem; color: rgba(255,255,255,0.6);">暂停期间不会复活，可以观战</p>
+  </div>
 
   <div id="app">
     <!-- 登录界面 -->
@@ -550,7 +607,9 @@
           <div class="controls-info">
             <h4>操作说明</h4>
             <p>方向键 / WASD 控制移动</p>
+            <p>按 P 或点击按钮暂停</p>
           </div>
+          <button id="btn-pause" class="pause-btn">暂停</button>
         </div>
       </div>
     </div>

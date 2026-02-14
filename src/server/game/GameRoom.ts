@@ -188,6 +188,7 @@ export class GameRoom {
         speed: 1,
         score: 0,
         isAlive: true,
+        isPaused: false,
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
         spawnTime: Date.now(),
@@ -213,6 +214,7 @@ export class GameRoom {
       speed: 1,
       score: 0,
       isAlive: true,
+      isPaused: false,
       effects: [],
       color: this.playerColors.get(playerId) || '#FF6B6B',
       spawnTime: Date.now(),
@@ -257,12 +259,29 @@ export class GameRoom {
     if (!this.gameState) return;
 
     const snake = this.gameState.snakes.find(s => s.playerId === playerId);
-    if (!snake || !snake.isAlive) return;
+    if (!snake || !snake.isAlive || snake.isPaused) return;
 
     // 防止 180° 转向
     if (getOppositeDirection(snake.direction) !== input.direction) {
       snake.direction = input.direction;
     }
+  }
+
+  // 切换暂停状态
+  togglePause(playerId: string): boolean {
+    if (!this.gameState) return false;
+
+    const snake = this.gameState.snakes.find(s => s.playerId === playerId);
+    if (!snake) return false;
+
+    snake.isPaused = !snake.isPaused;
+
+    // 如果暂停，清除复活时间（停止复活）
+    if (snake.isPaused && snake.respawnTime) {
+      snake.respawnTime = undefined;
+    }
+
+    return snake.isPaused;
   }
 
   private createInitialState(): GameState {
@@ -284,6 +303,7 @@ export class GameRoom {
         speed: 1,
         score: 0,
         isAlive: true,
+        isPaused: false,
         effects: [],
         color: this.playerColors.get(playerId) || '#FF6B6B',
         spawnTime: Date.now(),
@@ -396,8 +416,8 @@ export class GameRoom {
 
     const now = Date.now();
     for (const snake of this.gameState.snakes) {
-      // 如果蛇死亡且到达复活时间
-      if (!snake.isAlive && snake.respawnTime && now >= snake.respawnTime) {
+      // 如果蛇死亡且到达复活时间（暂停时不复活）
+      if (!snake.isAlive && snake.respawnTime && now >= snake.respawnTime && !snake.isPaused) {
         this.respawnSnake(snake);
       }
     }
@@ -410,7 +430,7 @@ export class GameRoom {
     const gridHeight = this.config.mapHeight;
 
     for (const snake of this.gameState.snakes) {
-      if (!snake.isAlive) continue;
+      if (!snake.isAlive || snake.isPaused) continue;
 
       // 更新效果
       const now = Date.now();

@@ -79,6 +79,11 @@ function setupEventListeners() {
     networkClient!.requestRoomList();
   });
 
+  // 暂停/继续
+  uiManager.on('togglePause', () => {
+    networkClient!.togglePause();
+  });
+
   // 网络事件
   networkClient.on('player:joined', (data: { player: PlayerInfo }) => {
     uiManager!.setPlayerInfo(data.player);
@@ -132,7 +137,16 @@ function setupEventListeners() {
   networkClient.on('game:ended', (data: { results: GameResult[] }) => {
     game!.stop();
     uiManager!.clearGameMessages();
+    uiManager!.hidePauseOverlay();
     uiManager!.showGameOver(data.results);
+  });
+
+  networkClient.on('game:pause_changed', (data: { isPaused: boolean }) => {
+    if (data.isPaused) {
+      uiManager!.showPauseOverlay();
+    } else {
+      uiManager!.hidePauseOverlay();
+    }
   });
 
   networkClient.on('error', (message: string) => {

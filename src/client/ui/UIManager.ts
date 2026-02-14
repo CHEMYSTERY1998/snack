@@ -67,6 +67,23 @@ export class UIManager {
     btnLogout?.addEventListener('click', () => {
       this.emit('logout', null);
     });
+
+    // 暂停按钮
+    const btnPause = document.getElementById('btn-pause');
+    btnPause?.addEventListener('click', () => {
+      this.emit('togglePause', null);
+    });
+
+    // 键盘暂停 (P键)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'p' || e.key === 'P') {
+        // 只在游戏界面响应
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen && !gameScreen.classList.contains('hidden')) {
+          this.emit('togglePause', null);
+        }
+      }
+    });
   }
 
   // 事件系统
@@ -259,6 +276,31 @@ export class UIManager {
   showLatency(): void {
     const indicator = document.getElementById('latency-indicator');
     indicator?.classList.remove('hidden');
+  }
+
+  // 暂停遮罩
+  showPauseOverlay(): void {
+    const overlay = document.getElementById('pause-overlay');
+    overlay?.classList.remove('hidden');
+
+    // 更新暂停按钮状态
+    const btnPause = document.getElementById('btn-pause');
+    if (btnPause) {
+      btnPause.textContent = '继续';
+      btnPause.classList.add('paused');
+    }
+  }
+
+  hidePauseOverlay(): void {
+    const overlay = document.getElementById('pause-overlay');
+    overlay?.classList.add('hidden');
+
+    // 更新暂停按钮状态
+    const btnPause = document.getElementById('btn-pause');
+    if (btnPause) {
+      btnPause.textContent = '暂停';
+      btnPause.classList.remove('paused');
+    }
   }
 
   // 游戏消息

@@ -121,6 +121,10 @@ export class NetworkClient {
       this.emit('game:ended', data);
     });
 
+    this.socket.on('game:pause_changed', (data) => {
+      this.emit('game:pause_changed', data);
+    });
+
     this.socket.on('game:input_ack', (data) => {
       this.emit('game:input_ack', data);
     });
@@ -205,6 +209,11 @@ export class NetworkClient {
   ready(): void {
     if (!this.socket) return;
     this.socket.emit('game:ready');
+  }
+
+  togglePause(): void {
+    if (!this.socket) return;
+    this.socket.emit('game:pause');
   }
 
   // 排行榜 API

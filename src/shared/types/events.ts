@@ -20,6 +20,7 @@ export interface ClientToServerEvents {
   'game:start': () => void;
   'game:input': (data: PlayerInput) => void;
   'game:ready': () => void;
+  'game:pause': () => void; // 切换暂停状态
 
   // 排行榜
   'leaderboard:get': (data?: { limit?: number }) => void;
@@ -51,6 +52,7 @@ export interface ServerToClientEvents {
   'game:started': () => void;
   'game:ended': (data: { results: GameResult[] }) => void;
   'game:input_ack': (data: { tick: number; direction: string }) => void;
+  'game:pause_changed': (data: { isPaused: boolean }) => void;
 
   // 排行榜
   'leaderboard:data': (data: { entries: LeaderboardEntry[] }) => void;
