@@ -1,8 +1,14 @@
-import type { GameState, Direction, SnakeState } from '@shared/types/game';
+import type { GameState, Direction, SnakeState, Position } from '@shared/types/game';
 import type { NetworkClient } from '../network/NetworkClient';
 import { Renderer } from '../renderer/Renderer';
 import { InputHandler } from './InputHandler';
 import { DEFAULT_GAME_CONFIG } from '@shared/constants';
+
+// 用于插值的状态快照
+interface StateSnapshot {
+  state: GameState;
+  timestamp: number;
+}
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -12,6 +18,8 @@ export class Game {
   private networkClient: NetworkClient;
 
   private gameState: GameState | null = null;
+  private previousState: StateSnapshot | null = null;
+  private currentState: StateSnapshot | null = null;
   private isRunning = false;
   private lastFrameTime = 0;
   private animationFrameId: number | null = null;
@@ -92,6 +100,10 @@ export class Game {
       }
     }
 
+    // 保存状态快照用于插值
+    const now = performance.now();
+    this.previousState = this.currentState;
+    this.currentState = { state, timestamp: now };
     this.gameState = state;
     this.updateHUD();
   }
@@ -123,7 +135,78 @@ export class Game {
       return;
     }
 
-    this.renderer.render(this.gameState, this.localPlayerId);
+    // 使用插值状态渲染
+    const interpolatedState = this.getInterpolatedState();
+    this.renderer.render(interpolatedState, this.localPlayerId);
+  }
+
+  /**
+   * 获取插值后的游戏状态
+   */
+  private getInterpolatedState(): GameState {
+    if (!this.gameState) {
+      return this.gameState!;
+    }
+
+    // 如果没有前一个状态，直接返回当前状态
+    if (!this.previousState || !this.currentState) {
+      return this.gameState;
+    }
+
+    const now = performance.now();
+    const renderTime = now - this.currentState.timestamp;
+    const tickInterval = this.currentState.state.tick - this.previousState.state.tick > 0
+      ? this.currentState.timestamp - this.previousState.timestamp
+      : DEFAULT_GAME_CONFIG.gameSpeed;
+
+    // 计算插值进度 (0-1)，限制最大值为1避免过度预测
+    const alpha = Math.min(1, renderTime / tickInterval);
+
+    // 如果状态差异太大（可能是重新开始或大量变化），跳过插值
+    if (Math.abs(this.currentState.state.tick - this.previousState.state.tick) > 5) {
+      return this.gameState;
+    }
+
+    // 对每条蛇进行插值
+    const interpolatedSnakes = this.gameState.snakes.map(snake => {
+      const prevSnake = this.previousState!.state.snakes.find(s => s.id === snake.id);
+
+      // 如果没有前一个状态或蛇刚复活，不插值
+      if (!prevSnake || !prevSnake.isAlive || !snake.isAlive) {
+        return snake;
+      }
+
+      // 如果蛇身长度变化太大，不插值
+      if (Math.abs(prevSnake.segments.length - snake.segments.length) > 2) {
+        return snake;
+      }
+
+      // 插值每个身体段
+      const interpolatedSegments = snake.segments.map((segment, index) => {
+        const prevSegment = prevSnake.segments[index];
+
+        if (!prevSegment) {
+          return segment;
+        }
+
+        return {
+          position: {
+            x: prevSegment.position.x + (segment.position.x - prevSegment.position.x) * alpha,
+            y: prevSegment.position.y + (segment.position.y - prevSegment.position.y) * alpha,
+          },
+        };
+      });
+
+      return {
+        ...snake,
+        segments: interpolatedSegments,
+      };
+    });
+
+    return {
+      ...this.gameState,
+      snakes: interpolatedSnakes,
+    };
   }
 
   private updateHUD(): void {
