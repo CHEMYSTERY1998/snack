@@ -13,6 +13,7 @@ export class GameRoom {
   gameLoop: NodeJS.Timeout | null = null;
 
   private playerColors: Map<string, string> = new Map();
+  private playerNames: Map<string, string> = new Map();
   private _playerInputs: Map<string, Direction> = new Map();
   private playerKillCounts: Map<string, number> = new Map();
   private playerStartTimes: Map<string, number> = new Map();
@@ -37,7 +38,7 @@ export class GameRoom {
     };
   }
 
-  addPlayer(playerId: string): void {
+  addPlayer(playerId: string, playerName?: string): void {
     if (!this.playerIds.includes(playerId)) {
       this.playerIds.push(playerId);
       this.info.playerCount = this.playerIds.length;
@@ -46,6 +47,11 @@ export class GameRoom {
       // 分配颜色
       const colorIndex = this.playerIds.length - 1;
       this.playerColors.set(playerId, this.colors[colorIndex % this.colors.length]);
+
+      // 存储玩家名称
+      if (playerName) {
+        this.playerNames.set(playerId, playerName);
+      }
     }
   }
 
@@ -56,6 +62,7 @@ export class GameRoom {
       this.info.playerCount = this.playerIds.length;
       this.state.playerIds = this.playerIds;
       this.playerColors.delete(playerId);
+      this.playerNames.delete(playerId);
     }
   }
 
@@ -636,7 +643,7 @@ export class GameRoom {
 
     const results: GameResult[] = this.gameState.snakes.map(snake => ({
       playerId: snake.playerId,
-      playerName: `Player_${snake.playerId.substring(0, 4)}`,
+      playerName: this.playerNames.get(snake.playerId) || `Player_${snake.playerId.substring(0, 4)}`,
       score: snake.score,
       rank: 0,
       killCount: this.playerKillCounts.get(snake.playerId) || 0,

@@ -51,7 +51,7 @@ export class RoomManager {
     return this.rooms.get(roomId)?.state;
   }
 
-  joinRoom(roomId: string, playerId: string, password?: string): { success: boolean; error?: string } {
+  joinRoom(roomId: string, playerId: string, password?: string, playerName?: string): { success: boolean; error?: string } {
     const room = this.rooms.get(roomId);
     if (!room) {
       return { success: false, error: '房间不存在' };
@@ -67,7 +67,7 @@ export class RoomManager {
       return { success: false, error: '房间已满' };
     }
 
-    room.addPlayer(playerId);
+    room.addPlayer(playerId, playerName);
 
     // 如果游戏正在进行，为新玩家创建蛇
     if (room.info.status === 'playing') {

@@ -139,10 +139,11 @@ export class SocketHandler {
       return;
     }
 
+    const player = this.playerManager.getPlayer(playerId);
     const roomInfo = this.roomManager.createRoom(playerId, name, password, config);
 
     // 自动加入房间
-    this.roomManager.joinRoom(roomInfo.id, playerId, password);
+    this.roomManager.joinRoom(roomInfo.id, playerId, password, player?.name);
     this.playerManager.setPlayerRoom(playerId, roomInfo.id);
     socket.join(roomInfo.id);
 
@@ -166,7 +167,8 @@ export class SocketHandler {
       return;
     }
 
-    const result = this.roomManager.joinRoom(roomId, playerId, password);
+    const player = this.playerManager.getPlayer(playerId);
+    const result = this.roomManager.joinRoom(roomId, playerId, password, player?.name);
     if (!result.success) {
       socket.emit('room:error', { message: result.error || '加入失败' });
       return;
@@ -177,7 +179,6 @@ export class SocketHandler {
 
     const roomState = this.roomManager.getRoomState(roomId);
     const players = this.playerManager.getPlayersByRoom(roomId);
-    const player = this.playerManager.getPlayer(playerId);
     const gameRoom = this.roomManager.getRoom(roomId);
 
     socket.emit('room:joined', { room: roomState!, players });
@@ -192,7 +193,9 @@ export class SocketHandler {
     }
 
     // 通知房间内其他人
-    socket.to(roomId).emit('room:player_joined', { player: player! });
+    if (player) {
+      socket.to(roomId).emit('room:player_joined', { player });
+    }
 
     console.log(`玩家 ${player?.name} 加入房间 ${roomId}`);
   }
