@@ -55,9 +55,10 @@ export type PowerUpType =
 export interface PowerUpState {
   id: string;
   type: PowerUpType;
-  position: Position;
+  position: Position; // 左上角位置
   duration: number;
   spawnTime: number;
+  size: number; // 道具占据的格子数（2 = 2x2）
 }
 
 // 激活的效果

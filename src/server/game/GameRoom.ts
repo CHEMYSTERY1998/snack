@@ -85,11 +85,20 @@ export class GameRoom {
     const length = DEFAULT_GAME_CONFIG.initialSnakeLength;
     const margin = 5;
 
-    // 获取所有已占用的位置（排除死亡蛇）
+    // 获取所有已占用的位置（排除死亡蛇，包括道具的所有格子）
     const occupiedPositions = [
       ...this.gameState.snakes.filter(s => s.isAlive).flatMap(s => s.segments.map(seg => seg.position)),
       ...this.gameState.foods.map(f => f.position),
-      ...this.gameState.powerUps.map(p => p.position),
+      ...this.gameState.powerUps.flatMap(p => {
+        const positions: Position[] = [];
+        const size = p.size || 1;
+        for (let dx = 0; dx < size; dx++) {
+          for (let dy = 0; dy < size; dy++) {
+            positions.push({ x: p.position.x + dx, y: p.position.y + dy });
+          }
+        }
+        return positions;
+      }),
     ];
 
     const directions: Direction[] = ['up', 'down', 'left', 'right'];
@@ -501,8 +510,18 @@ export class GameRoom {
         snake.segments.pop();
       }
 
-      // 检查道具
-      const powerUpIndex = this.gameState.powerUps.findIndex(p => isSamePosition(p.position, newHead));
+      // 检查道具（道具占据多个格子）
+      const powerUpIndex = this.gameState.powerUps.findIndex(p => {
+        const size = p.size || 1;
+        for (let dx = 0; dx < size; dx++) {
+          for (let dy = 0; dy < size; dy++) {
+            if (isSamePosition({ x: p.position.x + dx, y: p.position.y + dy }, newHead)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      });
       if (powerUpIndex !== -1) {
         const powerUp = this.gameState.powerUps[powerUpIndex];
         this.applyPowerUp(snake, powerUp);
@@ -664,19 +683,49 @@ export class GameRoom {
     const maxPowerUps = 3;
     if (this.gameState.powerUps.length >= maxPowerUps) return;
 
+    const powerUpSize = 2; // 2x2 格子
+
+    // 获取所有已占用的位置（包括现有道具的所有格子）
     const occupiedPositions = [
       ...this.gameState.snakes.flatMap(s => s.segments.map(seg => seg.position)),
       ...this.gameState.foods.map(f => f.position),
-      ...this.gameState.powerUps.map(p => p.position),
+      ...this.gameState.powerUps.flatMap(p => {
+        const positions: Position[] = [];
+        for (let dx = 0; dx < (p.size || 1); dx++) {
+          for (let dy = 0; dy < (p.size || 1); dy++) {
+            positions.push({ x: p.position.x + dx, y: p.position.y + dy });
+          }
+        }
+        return positions;
+      }),
     ];
 
-    const pos = randomUnoccupiedPosition(
-      this.config.mapWidth,
-      this.config.mapHeight,
-      occupiedPositions
-    );
+    // 找一个可以容纳 2x2 道具的位置
+    const gridWidth = this.config.mapWidth;
+    const gridHeight = this.config.mapHeight;
+    let validPos: Position | null = null;
 
-    if (pos) {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const x = Math.floor(Math.random() * (gridWidth - powerUpSize + 1));
+      const y = Math.floor(Math.random() * (gridHeight - powerUpSize + 1));
+
+      // 检查 2x2 区域是否都被占用
+      let allFree = true;
+      for (let dx = 0; dx < powerUpSize && allFree; dx++) {
+        for (let dy = 0; dy < powerUpSize && allFree; dy++) {
+          if (isPositionOccupied({ x: x + dx, y: y + dy }, occupiedPositions)) {
+            allFree = false;
+          }
+        }
+      }
+
+      if (allFree) {
+        validPos = { x, y };
+        break;
+      }
+    }
+
+    if (validPos) {
       const types: PowerUpType[] = [
         'speed_boost',
         'speed_slow',
@@ -689,9 +738,10 @@ export class GameRoom {
       this.gameState.powerUps.push({
         id: generateId(),
         type,
-        position: pos,
+        position: validPos,
         duration: DEFAULT_GAME_CONFIG.powerUpDuration[type] || 5000,
         spawnTime: Date.now(),
+        size: powerUpSize,
       });
     }
   }

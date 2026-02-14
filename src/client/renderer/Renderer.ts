@@ -234,21 +234,29 @@ export class Renderer {
 
   private drawPowerUps(powerUps: PowerUpState[]): void {
     for (const powerUp of powerUps) {
+      const size = powerUp.size || 1;
+      const totalSize = size * this.cellSize;
       const x = powerUp.position.x * this.cellSize;
       const y = powerUp.position.y * this.cellSize;
       const icon = POWER_UP_ICONS[powerUp.type] || '?';
 
-      // 背景光晕
+      // 背景（2x2 格子）
       this.ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
       this.ctx.beginPath();
-      this.ctx.arc(x + this.cellSize / 2, y + this.cellSize / 2, this.cellSize / 2, 0, Math.PI * 2);
+      this.ctx.arc(
+        x + totalSize / 2,
+        y + totalSize / 2,
+        totalSize / 2 - 2,
+        0,
+        Math.PI * 2
+      );
       this.ctx.fill();
 
-      // 绘制图标
-      this.ctx.font = `${this.cellSize - 4}px sans-serif`;
+      // 绘制图标（居中在 2x2 区域）
+      this.ctx.font = `${totalSize - 8}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(icon, x + this.cellSize / 2, y + this.cellSize / 2);
+      this.ctx.fillText(icon, x + totalSize / 2, y + totalSize / 2);
     }
   }
 
